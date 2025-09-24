@@ -1,0 +1,33 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+
+# Build outputs
+dist/
+build/
+
+# TypeScript
+*.tsbuildinfo
+
+# Sequelize
+*.sqlite
+*.db
+
+# IDEs y sistemas
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Macros y temporales
+*.tmp
+*.swp

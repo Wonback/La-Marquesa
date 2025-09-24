@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",                       // Versión de JS a generar
+    "module": "CommonJS",                     // Node usa CommonJS
+    "rootDir": "src",                         // Carpeta donde está tu TS
+    "outDir": "dist",                         // Carpeta donde se compila JS
+    "strict": true,                           // Activa chequeo estricto
+    "moduleResolution": "node",               // Resolución de módulos estilo Node
+    "esModuleInterop": true,                  // Para poder usar import de CommonJS
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,                     // Evita errores de tipado de librerías
+    "resolveJsonModule": true,                // Para importar JSON
+    "noImplicitAny": true,                    // Previene variables any sin declarar
+    "types": ["node"]                         // Tipos globales de Node
+  },
+  "include": ["src"],                          // Archivos TS a incluir
+  "exclude": ["node_modules", "dist"]          // Archivos a excluir
+}
