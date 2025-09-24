@@ -1,4 +1,4 @@
-# La-Marquesa
+
 # La Marquesa - Panificación
 
 Trabajo práctico de **Metodología en Sistemas 2**  
