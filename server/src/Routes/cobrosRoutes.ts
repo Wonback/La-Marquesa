@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { pedidoController } from '../Controllers/pedidoController';
+import { cobroController } from '../Controllers/cobrosController';
 import { authenticateJWT } from '../Middlewares/authMiddlewares';
 import { authorizeRoles } from '../Middlewares/roleMiddlewares';
 
@@ -10,7 +10,7 @@ router.post(
   authenticateJWT,
   authorizeRoles('Ventas', 'Admin'),
   async (req, res, next) => {
-    await pedidoController.crearPedido(req, res, next);
+    await cobroController.crearCobro(req, res, next);
   }
 );
 
@@ -18,7 +18,7 @@ router.get(
   '/',
   authenticateJWT,
   async (req, res, next) => {
-    await pedidoController.listarPedidos(req, res, next);
+    await cobroController.listarCobros(req, res, next);
   }
 );
 
@@ -26,24 +26,16 @@ router.get(
   '/:id',
   authenticateJWT,
   async (req, res, next) => {
-    await pedidoController.obtenerPedido(req, res, next);
+    await cobroController.obtenerCobro(req, res, next);
   }
 );
 
 router.put(
-  '/:id/confirmar',
+  '/:id',
   authenticateJWT,
   authorizeRoles('Ventas', 'Admin'),
   async (req, res, next) => {
-    await pedidoController.confirmarPedido(req, res, next);
-  }
-);
-
-router.put(
-  '/:id/estado',
-  authenticateJWT,
-  async (req, res, next) => {
-    await pedidoController.actualizarEstado(req, res, next);
+    await cobroController.actualizarCobro(req, res, next);
   }
 );
 
@@ -52,7 +44,7 @@ router.delete(
   authenticateJWT,
   authorizeRoles('Admin'),
   async (req, res, next) => {
-    await pedidoController.eliminarPedido(req, res, next);
+    await cobroController.eliminarCobro(req, res, next);
   }
 );
 

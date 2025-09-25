@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { pedidoController } from '../Controllers/pedidoController';
+import { recetaController } from '../Controllers/recetaController';
 import { authenticateJWT } from '../Middlewares/authMiddlewares';
 import { authorizeRoles } from '../Middlewares/roleMiddlewares';
 
@@ -8,9 +8,9 @@ const router = Router();
 router.post(
   '/',
   authenticateJWT,
-  authorizeRoles('Ventas', 'Admin'),
+  authorizeRoles('Admin'),
   async (req, res, next) => {
-    await pedidoController.crearPedido(req, res, next);
+    await recetaController.crearReceta(req, res, next);
   }
 );
 
@@ -18,7 +18,7 @@ router.get(
   '/',
   authenticateJWT,
   async (req, res, next) => {
-    await pedidoController.listarPedidos(req, res, next);
+    await recetaController.listarRecetas(req, res, next);
   }
 );
 
@@ -26,24 +26,16 @@ router.get(
   '/:id',
   authenticateJWT,
   async (req, res, next) => {
-    await pedidoController.obtenerPedido(req, res, next);
+    await recetaController.obtenerReceta(req, res, next);
   }
 );
 
 router.put(
-  '/:id/confirmar',
+  '/:id',
   authenticateJWT,
-  authorizeRoles('Ventas', 'Admin'),
+  authorizeRoles('Admin'),
   async (req, res, next) => {
-    await pedidoController.confirmarPedido(req, res, next);
-  }
-);
-
-router.put(
-  '/:id/estado',
-  authenticateJWT,
-  async (req, res, next) => {
-    await pedidoController.actualizarEstado(req, res, next);
+    await recetaController.actualizarReceta(req, res, next);
   }
 );
 
@@ -52,7 +44,7 @@ router.delete(
   authenticateJWT,
   authorizeRoles('Admin'),
   async (req, res, next) => {
-    await pedidoController.eliminarPedido(req, res, next);
+    await recetaController.eliminarReceta(req, res, next);
   }
 );
 
