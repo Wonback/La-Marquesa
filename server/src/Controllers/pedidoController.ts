@@ -7,21 +7,27 @@ import { Receta } from '../Models/Receta';
 import { DetalleReceta } from '../Models/DetalleReceta';
 import { Insumo } from '../Models/Insumo';
 
+const ESTADOS_VALIDOS = ['registrado', 'confirmado', 'en producción', 'listo', 'entregado'] as const;
+
 export const pedidoController = {
   crearPedido: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { cliente_id, fecha_entrega, productos } = req.body;
+
+      // validar que tenga al menos un producto
+      if (!productos || productos.length === 0) {
+        return res.status(400).json({ message: 'Un pedido debe contener al menos un producto' });
+      }
+
       const nuevoPedido = await Pedido.create({ cliente_id, fecha_entrega });
 
-      if (productos && productos.length > 0) {
-        for (const item of productos) {
-          await DetallePedido.create({
-            pedido_id: nuevoPedido.id,
-            producto_id: item.producto_id,
-            cantidad: item.cantidad,
-            observaciones: item.observaciones || null,
-          });
-        }
+      for (const item of productos) {
+        await DetallePedido.create({
+          pedido_id: nuevoPedido.id,
+          producto_id: item.producto_id,
+          cantidad: item.cantidad,
+          observaciones: item.observaciones || null,
+        });
       }
 
       const pedidoConDetalle = await Pedido.findByPk(nuevoPedido.id, {
@@ -68,14 +74,50 @@ export const pedidoController = {
 
   actualizarEstado: async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const { estado } = req.body;
+      const user = (req as any).user;
       const pedido = await Pedido.findByPk(req.params.id);
+
       if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
-      const { estado } = req.body;
+      // validar estado
+      if (!ESTADOS_VALIDOS.includes(estado)) {
+        return res.status(400).json({ message: 'Estado inválido' });
+      }
+
+      // validar transición
+      const transiciones: Record<string, string[]> = {
+        registrado: ['confirmado'],
+        confirmado: ['en producción'],
+        'en producción': ['listo'],
+        listo: ['entregado'],
+        entregado: [],
+      };
+
+      if (!transiciones[pedido.estado].includes(estado)) {
+        return res.status(400).json({ message: `No se puede pasar de '${pedido.estado}' a '${estado}'` });
+      }
+
+      if (estado === 'confirmado' && !['Ventas', 'Admin'].includes(user.rol)) {
+        return res.status(403).json({ message: 'Solo Ventas o Admin pueden confirmar pedidos' });
+      }
+
+      if (estado === 'en producción' && !['Producción', 'Admin'].includes(user.rol)) {
+        return res.status(403).json({ message: 'Solo Producción o Admin pueden iniciar producción' });
+      }
+
+      if (estado === 'listo' && !['Producción', 'Admin'].includes(user.rol)) {
+        return res.status(403).json({ message: 'Solo Producción o Admin pueden marcar como listo' });
+      }
+
+      if (estado === 'entregado' && !['Ventas', 'Admin'].includes(user.rol)) {
+        return res.status(403).json({ message: 'Solo Ventas o Admin pueden entregar pedidos' });
+      }
+
       pedido.estado = estado;
       await pedido.save();
 
-      res.json(pedido);
+      res.json({ message: `Pedido actualizado a '${estado}'`, pedido });
     } catch (err) {
       next(err);
     }
@@ -95,6 +137,7 @@ export const pedidoController = {
 
   confirmarPedido: async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const user = (req as any).user;
       const pedido = await Pedido.findByPk(req.params.id, {
         include: [
           { model: DetallePedido, as: 'detallePedidos', include: [Producto] },
@@ -104,7 +147,19 @@ export const pedidoController = {
 
       if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
-      for (const detalle of pedido.detallePedidos || []) {
+      if (pedido.estado !== 'registrado') {
+        return res.status(400).json({ message: `El pedido no puede confirmarse porque está en estado '${pedido.estado}'` });
+      }
+
+      if (!['Ventas', 'Admin'].includes(user.rol)) {
+        return res.status(403).json({ message: 'Solo Ventas o Admin pueden confirmar pedidos' });
+      }
+
+      if (!pedido.detallePedidos || pedido.detallePedidos.length === 0) {
+        return res.status(400).json({ message: 'El pedido no tiene productos y no puede confirmarse' });
+      }
+
+      for (const detalle of pedido.detallePedidos) {
         const producto = detalle.Producto!;
         if (producto.es_elaborado) {
           const receta = await Receta.findOne({
@@ -112,9 +167,34 @@ export const pedidoController = {
             include: [{ model: DetalleReceta, as: 'detalleRecetas' }],
           });
 
-          if (!receta) continue;
+          if (!receta || !receta.detalleRecetas) continue;
 
-          for (const dr of receta.detalleRecetas || []) {
+          for (const dr of receta.detalleRecetas) {
+            const insumo = await Insumo.findByPk(dr.insumo_id);
+            if (!insumo) continue;
+
+            const cantidadUsada = dr.cantidad * detalle.cantidad;
+
+            if (insumo.stock < cantidadUsada) {
+              return res.status(400).json({
+                message: `No hay stock suficiente del insumo '${insumo.nombre}'. Disponible: ${insumo.stock}, requerido: ${cantidadUsada}`,
+              });
+            }
+          }
+        }
+      }
+
+      for (const detalle of pedido.detallePedidos) {
+        const producto = detalle.Producto!;
+        if (producto.es_elaborado) {
+          const receta = await Receta.findOne({
+            where: { producto_id: producto.id },
+            include: [{ model: DetalleReceta, as: 'detalleRecetas' }],
+          });
+
+          if (!receta || !receta.detalleRecetas) continue;
+
+          for (const dr of receta.detalleRecetas) {
             const insumo = await Insumo.findByPk(dr.insumo_id);
             if (!insumo) continue;
 
@@ -123,7 +203,7 @@ export const pedidoController = {
             await insumo.save();
 
             if (insumo.stock <= insumo.stock_minimo) {
-              console.log(`ALERTA: El insumo ${insumo.nombre} está por debajo del stock mínimo.`);
+              console.log(`⚠️ ALERTA: El insumo ${insumo.nombre} está por debajo del stock mínimo.`);
             }
           }
         }
