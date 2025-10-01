@@ -1,11 +1,13 @@
 import { Model, DataTypes } from 'sequelize';
 import { sequelize } from '../db';
-
+import { Receta } from './Receta';
 export class Producto extends Model {
   public id!: number;
   public nombre!: string;
   public es_elaborado!: boolean;
   public precio!: number;
+
+  public receta?: Receta;
 }
 
 Producto.init(

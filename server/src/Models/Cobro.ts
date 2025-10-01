@@ -25,5 +25,4 @@ Cobro.init(
   { sequelize, tableName: 'cobros', timestamps: false }
 );
 
-Cobro.belongsTo(Pedido, { foreignKey: 'pedido_id' });
-Pedido.hasMany(Cobro, { foreignKey: 'pedido_id' });
+
