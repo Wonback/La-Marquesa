@@ -10,6 +10,7 @@ export class DetalleReceta extends Model {
   public cantidad!: number;
 
   public detalleRecetas?: DetalleReceta[];
+  public insumo?: Insumo;
 }
 
 DetalleReceta.init(
@@ -38,8 +39,4 @@ DetalleReceta.init(
   { sequelize, tableName: 'detalle_recetas', timestamps: false }
 );
 
-DetalleReceta.belongsTo(Receta, { foreignKey: 'receta_id' });
-Receta.hasMany(DetalleReceta, { foreignKey: 'receta_id' });
 
-DetalleReceta.belongsTo(Insumo, { foreignKey: 'insumo_id' });
-Insumo.hasMany(DetalleReceta, { foreignKey: 'insumo_id' });

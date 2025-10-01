@@ -3,7 +3,7 @@ dotenv.config();
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { sequelize } from "./db";
-
+import "./Models/associations"; 
 import clientesRoutes from "./Routes/clienteRoutes";
 import pedidosRoutes from "./Routes/pedidosRoutes";
 import productosRoutes from "./Routes/productosRoutes";

@@ -24,7 +24,4 @@ Pedido.init(
   { sequelize, tableName: 'pedidos', timestamps: false }
 );
 
-Pedido.belongsTo(Cliente, { foreignKey: 'cliente_id' });
-Cliente.hasMany(Pedido, { foreignKey: 'cliente_id' });
 
-Pedido.hasMany(DetallePedido, { foreignKey: 'pedido_id', as: 'detallePedidos' });

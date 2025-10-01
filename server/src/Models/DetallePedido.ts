@@ -34,8 +34,4 @@ DetallePedido.init(
   { sequelize, tableName: 'detalle_pedidos', timestamps: false }
 );
 
-DetallePedido.belongsTo(Pedido, { foreignKey: 'pedido_id' });
-Pedido.hasMany(DetallePedido, { foreignKey: 'pedido_id' });
 
-DetallePedido.belongsTo(Producto, { foreignKey: 'producto_id' });
-Producto.hasMany(DetallePedido, { foreignKey: 'producto_id' });

@@ -7,42 +7,44 @@ const METODOS_VALIDOS = ['efectivo', 'debito', 'credito', 'transferencia'] as co
 export const cobroController = {
   crearCobro: async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { pedido_id, monto, metodo_pago } = req.body;
+      const { pedido_id, monto, metodo_pago } = req.body;
 
-        const pedido = await Pedido.findByPk(pedido_id);
-        if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
+      const pedido = await Pedido.findByPk(pedido_id);
+      if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
-        if (pedido.estado !== 'listo') {
+      if (pedido.estado !== 'listo') {
         return res.status(400).json({
-            message: `Solo se puede cobrar un pedido en estado 'listo'. Estado actual: '${pedido.estado}'`,
+          message: `Solo se puede cobrar un pedido en estado 'listo'. Estado actual: '${pedido.estado}'`,
         });
-        }
+      }
 
-        if (!METODOS_VALIDOS.includes(metodo_pago.toLowerCase())) {
+      if (!METODOS_VALIDOS.includes(metodo_pago.toLowerCase())) {
         return res.status(400).json({ message: 'Método de pago inválido' });
-        }
+      }
 
-        const nuevoCobro = await Cobro.create({ pedido_id, monto, metodo_pago });
+      const nuevoCobro = await Cobro.create({ pedido_id, monto, metodo_pago });
 
-        pedido.estado = 'entregado';
-        await pedido.save();
+      pedido.estado = 'entregado';
+      await pedido.save();
 
-        const cobroConPedido = await Cobro.findByPk(nuevoCobro.id, {
-        include: [Pedido],
-        });
+      const cobroConPedido = await Cobro.findByPk(nuevoCobro.id, {
+        include: [{ model: Pedido, as: 'pedido' }],
+      });
 
-        res.status(201).json({
+      res.status(201).json({
         message: 'Cobro registrado y pedido entregado',
         cobro: cobroConPedido,
-        });
+      });
     } catch (err) {
-        next(err);
+      next(err);
     }
   },
 
   listarCobros: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const cobros = await Cobro.findAll({ include: [Pedido] });
+      const cobros = await Cobro.findAll({
+        include: [{ model: Pedido, as: 'pedido' }],
+      });
       res.json(cobros);
     } catch (err) {
       next(err);
@@ -51,7 +53,9 @@ export const cobroController = {
 
   obtenerCobro: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const cobro = await Cobro.findByPk(req.params.id, { include: [Pedido] });
+      const cobro = await Cobro.findByPk(req.params.id, {
+        include: [{ model: Pedido, as: 'pedido' }],
+      });
       if (!cobro) return res.status(404).json({ message: 'Cobro no encontrado' });
       res.json(cobro);
     } catch (err) {

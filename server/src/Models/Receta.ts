@@ -20,7 +20,3 @@ Receta.init(
   { sequelize, tableName: 'recetas', timestamps: false }
 );
 
-Receta.belongsTo(Producto, { foreignKey: 'producto_id' });
-Producto.hasOne(Receta, { foreignKey: 'producto_id' });
-
-Receta.hasMany(DetalleReceta, { foreignKey: 'receta_id', as: 'detalleRecetas' });

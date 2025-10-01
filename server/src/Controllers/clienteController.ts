@@ -1,10 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
 import { Cliente } from '../Models/Cliente';
+import { Pedido } from '../Models/Pedido';
+import { DetallePedido } from '../Models/DetallePedido';
+import { Producto } from '../Models/Producto';
 
 export const clienteController = {
   listarClientes: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const clientes = await Cliente.findAll();
+      const clientes = await Cliente.findAll({
+        include: [
+          {
+            model: Pedido,
+            as: 'pedidos',
+            include: [
+              {
+                model: DetallePedido,
+                as: 'detallePedidos',
+                include: [{ model: Producto }]
+              }
+            ]
+          }
+        ]
+      });
       res.json(clientes);
     } catch (err) {
       next(err);
@@ -13,7 +30,21 @@ export const clienteController = {
 
   obtenerCliente: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const cliente = await Cliente.findByPk(req.params.id);
+      const cliente = await Cliente.findByPk(req.params.id, {
+        include: [
+          {
+            model: Pedido,
+            as: 'pedidos',
+            include: [
+              {
+                model: DetallePedido,
+                as: 'detallePedidos',
+                include: [{ model: Producto }]
+              }
+            ]
+          }
+        ]
+      });
       if (!cliente) return res.status(404).json({ message: 'Cliente no encontrado' });
       res.json(cliente);
     } catch (err) {

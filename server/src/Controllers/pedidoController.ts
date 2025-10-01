@@ -9,12 +9,33 @@ import { Insumo } from '../Models/Insumo';
 
 const ESTADOS_VALIDOS = ['registrado', 'confirmado', 'en producción', 'listo', 'entregado'] as const;
 
+const pedidoInclude = [
+  {
+    model: DetallePedido,
+    as: 'detallePedidos',
+    include: [
+      {
+        model: Producto,
+        include: [
+          {
+            model: Receta,
+            as: 'receta',
+            include: [
+              { model: DetalleReceta, as: 'detalleRecetas', include: [{ model: Insumo, as: 'insumo' }]},
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  { model: Cliente },
+];
+
 export const pedidoController = {
   crearPedido: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { cliente_id, fecha_entrega, productos } = req.body;
 
-      // validar que tenga al menos un producto
       if (!productos || productos.length === 0) {
         return res.status(400).json({ message: 'Un pedido debe contener al menos un producto' });
       }
@@ -30,12 +51,7 @@ export const pedidoController = {
         });
       }
 
-      const pedidoConDetalle = await Pedido.findByPk(nuevoPedido.id, {
-        include: [
-          { model: DetallePedido, as: 'detallePedidos', include: [Producto] },
-          { model: Cliente },
-        ],
-      });
+      const pedidoConDetalle = await Pedido.findByPk(nuevoPedido.id, { include: pedidoInclude });
 
       res.status(201).json(pedidoConDetalle);
     } catch (err) {
@@ -45,12 +61,7 @@ export const pedidoController = {
 
   listarPedidos: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const pedidos = await Pedido.findAll({
-        include: [
-          { model: DetallePedido, as: 'detallePedidos', include: [Producto] },
-          { model: Cliente },
-        ],
-      });
+      const pedidos = await Pedido.findAll({ include: pedidoInclude });
       res.json(pedidos);
     } catch (err) {
       next(err);
@@ -59,12 +70,7 @@ export const pedidoController = {
 
   obtenerPedido: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const pedido = await Pedido.findByPk(req.params.id, {
-        include: [
-          { model: DetallePedido, as: 'detallePedidos', include: [Producto] },
-          { model: Cliente },
-        ],
-      });
+      const pedido = await Pedido.findByPk(req.params.id, { include: pedidoInclude });
       if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
       res.json(pedido);
     } catch (err) {
@@ -79,13 +85,10 @@ export const pedidoController = {
       const pedido = await Pedido.findByPk(req.params.id);
 
       if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
-
-      // validar estado
       if (!ESTADOS_VALIDOS.includes(estado)) {
         return res.status(400).json({ message: 'Estado inválido' });
       }
 
-      // validar transición
       const transiciones: Record<string, string[]> = {
         registrado: ['confirmado'],
         confirmado: ['en producción'],
@@ -101,15 +104,12 @@ export const pedidoController = {
       if (estado === 'confirmado' && !['Ventas', 'Admin'].includes(user.rol)) {
         return res.status(403).json({ message: 'Solo Ventas o Admin pueden confirmar pedidos' });
       }
-
       if (estado === 'en producción' && !['Producción', 'Admin'].includes(user.rol)) {
         return res.status(403).json({ message: 'Solo Producción o Admin pueden iniciar producción' });
       }
-
       if (estado === 'listo' && !['Producción', 'Admin'].includes(user.rol)) {
         return res.status(403).json({ message: 'Solo Producción o Admin pueden marcar como listo' });
       }
-
       if (estado === 'entregado' && !['Ventas', 'Admin'].includes(user.rol)) {
         return res.status(403).json({ message: 'Solo Ventas o Admin pueden entregar pedidos' });
       }
@@ -138,17 +138,14 @@ export const pedidoController = {
   confirmarPedido: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as any).user;
-      const pedido = await Pedido.findByPk(req.params.id, {
-        include: [
-          { model: DetallePedido, as: 'detallePedidos', include: [Producto] },
-          { model: Cliente },
-        ],
-      });
+      const pedido = await Pedido.findByPk(req.params.id, { include: pedidoInclude });
 
       if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
       if (pedido.estado !== 'registrado') {
-        return res.status(400).json({ message: `El pedido no puede confirmarse porque está en estado '${pedido.estado}'` });
+        return res.status(400).json({
+          message: `El pedido no puede confirmarse porque está en estado '${pedido.estado}'`,
+        });
       }
 
       if (!['Ventas', 'Admin'].includes(user.rol)) {
@@ -159,20 +156,12 @@ export const pedidoController = {
         return res.status(400).json({ message: 'El pedido no tiene productos y no puede confirmarse' });
       }
 
+      // Verificación de stock
       for (const detalle of pedido.detallePedidos) {
         const producto = detalle.Producto!;
-        if (producto.es_elaborado) {
-          const receta = await Receta.findOne({
-            where: { producto_id: producto.id },
-            include: [{ model: DetalleReceta, as: 'detalleRecetas' }],
-          });
-
-          if (!receta || !receta.detalleRecetas) continue;
-
-          for (const dr of receta.detalleRecetas) {
-            const insumo = await Insumo.findByPk(dr.insumo_id);
-            if (!insumo) continue;
-
+        if (producto.es_elaborado && producto.receta?.detalleRecetas) {
+          for (const dr of producto.receta.detalleRecetas) {
+            const insumo = dr.insumo!;
             const cantidadUsada = dr.cantidad * detalle.cantidad;
 
             if (insumo.stock < cantidadUsada) {
@@ -184,21 +173,14 @@ export const pedidoController = {
         }
       }
 
+      // Actualización de stock
       for (const detalle of pedido.detallePedidos) {
         const producto = detalle.Producto!;
-        if (producto.es_elaborado) {
-          const receta = await Receta.findOne({
-            where: { producto_id: producto.id },
-            include: [{ model: DetalleReceta, as: 'detalleRecetas' }],
-          });
-
-          if (!receta || !receta.detalleRecetas) continue;
-
-          for (const dr of receta.detalleRecetas) {
-            const insumo = await Insumo.findByPk(dr.insumo_id);
-            if (!insumo) continue;
-
+        if (producto.es_elaborado && producto.receta?.detalleRecetas) {
+          for (const dr of producto.receta.detalleRecetas) {
+            const insumo = dr.insumo!;
             const cantidadUsada = dr.cantidad * detalle.cantidad;
+
             insumo.stock -= cantidadUsada;
             await insumo.save();
 
@@ -216,5 +198,5 @@ export const pedidoController = {
     } catch (err) {
       next(err);
     }
-  },
+  }
 };
