@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { RequestHandler } from 'express';
 import { Producto } from '../Models/Producto';
 import { Receta } from '../Models/Receta';
 import { DetalleReceta } from '../Models/DetalleReceta';
@@ -21,8 +21,7 @@ interface ProductoBody {
   receta?: { insumo_id: number; cantidad: number }[]; // para productos elaborados
 }
 
-export const productoController = {
-  crearProducto: async (req: Request<{}, {}, ProductoBody>, res: Response, next: NextFunction) => {
+const crearProducto: RequestHandler<{}, any, ProductoBody> = async (req, res, next) => {
     try {
       const { nombre, es_elaborado, precio, receta } = req.body;
 
@@ -44,18 +43,18 @@ export const productoController = {
     } catch (err) {
       next(err);
     }
-  },
+  };
 
-  listarProductos: async (_req: Request, res: Response, next: NextFunction) => {
+const listarProductos: RequestHandler = async (_req, res, next) => {
     try {
       const productos = await Producto.findAll({ include: productoInclude });
       res.json(productos);
     } catch (err) {
       next(err);
     }
-  },
+  };
 
-  obtenerProducto: async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+const obtenerProducto: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
       const producto = await Producto.findByPk(req.params.id, { include: productoInclude });
       if (!producto) return res.status(404).json({ message: 'Producto no encontrado' });
@@ -63,9 +62,9 @@ export const productoController = {
     } catch (err) {
       next(err);
     }
-  },
+  };
 
-  actualizarProducto: async (req: Request<{ id: string }, {}, Partial<ProductoBody>>, res: Response, next: NextFunction) => {
+const actualizarProducto: RequestHandler<{ id: string }, any, Partial<ProductoBody>> = async (req, res, next) => {
     try {
       const producto = await Producto.findByPk(req.params.id);
       if (!producto) return res.status(404).json({ message: 'Producto no encontrado' });
@@ -94,9 +93,9 @@ export const productoController = {
     } catch (err) {
       next(err);
     }
-  },
+  };
 
-  eliminarProducto: async (req: Request, res: Response, next: NextFunction) => {
+const eliminarProducto: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
       const producto = await Producto.findByPk(req.params.id);
       if (!producto) return res.status(404).json({ message: 'Producto no encontrado' });
@@ -113,5 +112,12 @@ export const productoController = {
     } catch (err) {
       next(err);
     }
-  },
+  };
+
+export const productoController = {
+  crearProducto,
+  listarProductos,
+  obtenerProducto,
+  actualizarProducto,
+  eliminarProducto,
 };

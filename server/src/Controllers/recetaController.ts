@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { RequestHandler } from 'express';
 import { Receta } from '../Models/Receta';
 import { DetalleReceta } from '../Models/DetalleReceta';
 import { Producto } from '../Models/Producto';
@@ -23,8 +23,7 @@ interface RecetaBody {
   detalleRecetas?: DetalleRecetaBody[];
 }
 
-export const recetaController = {
-  crearReceta: async (req: Request<{}, {}, RecetaBody>, res: Response, next: NextFunction) => {
+const crearReceta: RequestHandler<{}, any, RecetaBody> = async (req, res, next) => {
     try {
       const { producto_id, detalleRecetas } = req.body;
 
@@ -45,18 +44,18 @@ export const recetaController = {
     } catch (err) {
       next(err);
     }
-  },
+  };
 
-  listarRecetas: async (_req: Request, res: Response, next: NextFunction) => {
+const listarRecetas: RequestHandler = async (_req, res, next) => {
     try {
       const recetas = await Receta.findAll({ include: recetaInclude });
       res.json(recetas);
     } catch (err) {
       next(err);
     }
-  },
+  };
 
-  obtenerReceta: async (req: Request, res: Response, next: NextFunction) => {
+const obtenerReceta: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
       const receta = await Receta.findByPk(req.params.id, { include: recetaInclude });
       if (!receta) return res.status(404).json({ message: 'Receta no encontrada' });
@@ -64,9 +63,9 @@ export const recetaController = {
     } catch (err) {
       next(err);
     }
-  },
+  };
 
-  actualizarReceta: async (req: Request<{ id: string }, {}, RecetaBody>, res: Response, next: NextFunction) => {
+const actualizarReceta: RequestHandler<{ id: string }, any, RecetaBody> = async (req, res, next) => {
     try {
       const receta = await Receta.findByPk(req.params.id);
       if (!receta) return res.status(404).json({ message: 'Receta no encontrada' });
@@ -92,9 +91,9 @@ export const recetaController = {
     } catch (err) {
       next(err);
     }
-  },
+  };
 
-  eliminarReceta: async (req: Request, res: Response, next: NextFunction) => {
+const eliminarReceta: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
       const receta = await Receta.findByPk(req.params.id);
       if (!receta) return res.status(404).json({ message: 'Receta no encontrada' });
@@ -107,5 +106,12 @@ export const recetaController = {
     } catch (err) {
       next(err);
     }
-  },
+  };
+
+export const recetaController = {
+  crearReceta,
+  listarRecetas,
+  obtenerReceta,
+  actualizarReceta,
+  eliminarReceta,
 };
