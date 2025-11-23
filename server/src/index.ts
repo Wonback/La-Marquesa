@@ -11,6 +11,7 @@ import insumosRoutes from "./Routes/insumoRoutes";
 import authRoutes from "./Routes/authRoutes";
 import cobrosRoutes from "./Routes/cobrosRoutes";
 import recetasRoutes from "./Routes/recetaRoutes";
+import swaggerDocument, { swaggerUiHtml } from "./swagger";
 
 const app = express();
 
@@ -29,6 +30,14 @@ app.use("/productos", productosRoutes);
 app.use("/insumos", insumosRoutes);
 app.use("/cobros", cobrosRoutes);
 app.use("/recetas", recetasRoutes);
+
+app.get("/docs.json", (req: Request, res: Response) => {
+  res.json(swaggerDocument);
+});
+
+app.get("/docs", (req: Request, res: Response) => {
+  res.type("text/html").send(swaggerUiHtml);
+});
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(err);
