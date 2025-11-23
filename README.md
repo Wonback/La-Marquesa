@@ -49,3 +49,16 @@ Empleado (abstracta)
  ├─ Ventas
  ├─ Producción
  └─ Administrador
+```
+
+---
+
+## 🧪 Documentación interactiva (Swagger)
+
+Para probar los endpoints del backend se habilitó Swagger UI directamente en el servidor Express.
+
+1. Levantá la API (por ejemplo `cd server && npm run dev`).
+2. Abrí <http://localhost:4000/docs> en el navegador (o el puerto configurado en `PORT`).
+3. Desde allí podés explorar los recursos, enviar requests autenticados con JWT y ver las estructuras de cada entidad.
+
+Si necesitás el archivo JSON del contrato, también está disponible en <http://localhost:4000/docs.json>.
