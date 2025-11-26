@@ -42,6 +42,7 @@ Usuario.init(
     rol: {
       type: DataTypes.ENUM('Ventas', 'Producción', 'Admin'),
       allowNull: false,
+      defaultValue: 'Ventas',
     },
   },
   { sequelize, tableName: 'usuarios', timestamps: true }

@@ -3,7 +3,10 @@ dotenv.config();
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { sequelize } from "./db";
-import "./Models/associations"; 
+import { applyAssociations } from "./Models/associations";
+
+// Apply associations
+applyAssociations(); 
 import clientesRoutes from "./Routes/clienteRoutes";
 import pedidosRoutes from "./Routes/pedidosRoutes";
 import productosRoutes from "./Routes/productosRoutes";
@@ -11,11 +14,12 @@ import insumosRoutes from "./Routes/insumoRoutes";
 import authRoutes from "./Routes/authRoutes";
 import cobrosRoutes from "./Routes/cobrosRoutes";
 import recetasRoutes from "./Routes/recetaRoutes";
+import dashboardRoutes from "./Routes/dashboardRoutes";
 
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000", "http://localhost:4200"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -29,6 +33,7 @@ app.use("/productos", productosRoutes);
 app.use("/insumos", insumosRoutes);
 app.use("/cobros", cobrosRoutes);
 app.use("/recetas", recetasRoutes);
+app.use("/dashboard", dashboardRoutes);
 
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error(err);

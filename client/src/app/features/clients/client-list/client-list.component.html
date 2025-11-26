@@ -1,0 +1,102 @@
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Cartera de Clientes</h2>
+        <a routerLink="/clientes/nuevo"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+            Nuevo Cliente
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Contacto</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Ubicación</th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Historial</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr *ngIf="loading">
+                        <td colspan="5" class="px-6 py-10 text-center text-gray-500 animate-pulse">
+                            Cargando cartera de clientes...
+                        </td>
+                    </tr>
+                    <tr *ngIf="!loading && clientes.length === 0">
+                        <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+                            No hay clientes registrados.
+                        </td>
+                    </tr>
+
+                    <tr *ngFor="let cliente of clientes" class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div
+                                        class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
+                                        {{ getInitials(cliente.nombre) }}
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-bold text-gray-900">{{ cliente.nombre }}</div>
+                                    <div class="text-xs text-gray-500">{{ cliente.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900 flex items-center gap-2">
+                                <i class="fas fa-phone text-gray-400 text-xs"></i>
+                                {{ cliente.telefono }}
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex flex-col">
+                                <span class="text-sm text-gray-900">{{ cliente.direccion || '-' }}</span>
+                                <span class="text-xs text-gray-500">{{ cliente.localidad || '' }}</span>
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span *ngIf="cliente.pedidos && cliente.pedidos.length > 0"
+                                class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                {{ cliente.pedidos.length }} Pedidos
+                            </span>
+                            <span *ngIf="!cliente.pedidos || cliente.pedidos.length === 0"
+                                class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-500">
+                                Sin actividad
+                            </span>
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end gap-3">
+                                <a [routerLink]="['/clientes/editar', cliente.id]"
+                                    class="text-indigo-600 hover:text-indigo-900 hover:underline">
+                                    Editar
+                                </a>
+                                <button (click)="deleteCliente(cliente.id!)"
+                                    class="text-red-600 hover:text-red-900 hover:underline">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,116 @@
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Tablero de Pedidos</h2>
+        <a routerLink="/pedidos/nuevo"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            Nuevo Pedido
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ID /
+                            Fecha</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Detalle
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Estado</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Total
+                        </th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr *ngIf="loading">
+                        <td colspan="6" class="px-6 py-10 text-center text-gray-500 animate-pulse">Cargando pedidos...
+                        </td>
+                    </tr>
+                    <tr *ngIf="!loading && pedidos.length === 0">
+                        <td colspan="6" class="px-6 py-10 text-center text-gray-500">No hay pedidos activos.</td>
+                    </tr>
+
+                    <tr *ngFor="let pedido of pedidos" class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex flex-col">
+                                <span class="text-xs font-mono text-gray-400">#{{ pedido.id }}</span>
+                                <span class="text-sm font-bold text-gray-900">{{ pedido.fecha_entrega |
+                                    date:'dd/MM/yyyy' }}</span>
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ pedido.cliente?.nombre || 'Eventual' }}
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col gap-1">
+                                <div *ngFor="let detalle of pedido.detallePedidos" class="text-xs text-gray-700">
+                                    <span class="font-bold">{{ detalle.cantidad }}x</span> {{ detalle.producto.nombre }}
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span
+                                class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full uppercase tracking-wide border"
+                                [ngClass]="getStatusColor(pedido.estado)">
+                                {{ pedido.estado }}
+                            </span>
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900">
+                            {{ calculateTotal(pedido) | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end items-center gap-3">
+
+                                <button *ngIf="pedido.estado === 'registrado'" (click)="avanzarEstado(pedido)"
+                                    class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded text-xs border border-blue-200 transition-colors"
+                                    title="Confirmar Pedido">
+                                    <i class="fas fa-check mr-1"></i> Confirmar
+                                </button>
+
+                                <button *ngIf="pedido.estado === 'confirmado'" (click)="avanzarEstado(pedido)"
+                                    class="text-yellow-700 hover:text-yellow-900 bg-yellow-50 hover:bg-yellow-100 px-2 py-1 rounded text-xs border border-yellow-200 transition-colors"
+                                    title="Iniciar Producción">
+                                    <i class="fas fa-cog mr-1"></i> Producir
+                                </button>
+
+                                <button *ngIf="pedido.estado === 'en producción'" (click)="avanzarEstado(pedido)"
+                                    class="text-purple-700 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded text-xs border border-purple-200 transition-colors"
+                                    title="Marcar como Listo">
+                                    <i class="fas fa-box-open mr-1"></i> Listo
+                                </button>
+
+                                <span *ngIf="pedido.estado === 'listo'" class="text-xs text-gray-400 italic mr-2">
+                                    Cobrar para entregar
+                                </span>
+
+                                <a [routerLink]="['/pedidos/editar', pedido.id]"
+                                    class="text-gray-400 hover:text-blue-600">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button (click)="deletePedido(pedido.id!)" class="text-gray-400 hover:text-red-600">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

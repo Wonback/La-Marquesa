@@ -7,7 +7,7 @@ import { Insumo } from '../Models/Insumo';
 const recetaInclude = [
   {
     model: DetalleReceta,
-    as: 'detalleRecetas',
+    as: 'detallesReceta', // <--- CORRECTO
     include: [{ model: Insumo, as: 'insumo' }],
   },
   { model: Producto, as: 'producto' },
@@ -98,7 +98,6 @@ const eliminarReceta: RequestHandler<{ id: string }> = async (req, res, next) =>
       const receta = await Receta.findByPk(req.params.id);
       if (!receta) return res.status(404).json({ message: 'Receta no encontrada' });
 
-      // Borrar detalles asociados
       await DetalleReceta.destroy({ where: { receta_id: receta.id } });
       await receta.destroy();
 

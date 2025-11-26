@@ -1,0 +1,113 @@
+<div class="container mx-auto px-4 py-6">
+    <div class="max-w-2xl mx-auto">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">{{ isEditMode ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
+            <p class="text-gray-500 text-sm">Defina los productos que estarán disponibles para la venta.</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+
+            <div *ngIf="error"
+                class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded flex items-center">
+                <i class="fas fa-exclamation-circle mr-2"></i> {{ error }}
+            </div>
+
+            <form [formGroup]="productForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="nombre">Nombre del Producto
+                        *</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-tag text-gray-400"></i>
+                        </div>
+                        <input type="text" id="nombre" formControlName="nombre"
+                            class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                            [ngClass]="{'border-red-300': productForm.get('nombre')?.invalid && productForm.get('nombre')?.touched}"
+                            placeholder="Ej: Torta Matilda">
+                    </div>
+                    <div *ngIf="productForm.get('nombre')?.invalid && productForm.get('nombre')?.touched"
+                        class="text-red-500 text-xs mt-1 ml-1">
+                        El nombre es requerido.
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="descripcion">Descripción</label>
+                    <div class="relative">
+                        <textarea id="descripcion" rows="3" formControlName="descripcion"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                            placeholder="Breve descripción de los ingredientes o sabor..."></textarea>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="precio">Precio de Venta
+                            *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 font-bold">$</span>
+                            </div>
+                            <input type="number" id="precio" formControlName="precio" min="0"
+                                class="w-full pl-8 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="stock">Stock Inicial</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-cubes text-gray-400"></i>
+                            </div>
+                            <input type="number" id="stock" formControlName="stock" min="0"
+                                class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" id="es_elaborado" formControlName="es_elaborado"
+                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="es_elaborado" class="font-medium text-gray-700 cursor-pointer">Producto
+                                Elaborado (Cocina)</label>
+                            <p class="text-gray-500">Marque esta casilla si el producto se fabrica con una receta e
+                                ingredientes.</p>
+                        </div>
+                    </div>
+
+                    <div *ngIf="productForm.get('es_elaborado')?.value"
+                        class="mt-3 ml-7 p-2 bg-blue-50 text-blue-700 text-xs rounded border border-blue-100">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Una vez guardado el producto, deberá ir a la sección <strong>Recetas</strong> para definir sus
+                        ingredientes.
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
+                    <a routerLink="/productos"
+                        class="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                        Cancelar
+                    </a>
+                    <button type="submit"
+                        class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        [disabled]="productForm.invalid || loading">
+                        <svg *ngIf="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ loading ? 'Guardando...' : (isEditMode ? 'Actualizar Producto' : 'Guardar Producto') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

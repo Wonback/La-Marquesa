@@ -1,0 +1,136 @@
+<div class="container mx-auto px-4 py-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+        <i class="fas fa-chart-line text-blue-600"></i> Panel de Control
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-emerald-500 flex items-center justify-between">
+            <div>
+                <div class="text-gray-500 text-sm font-medium mb-1">Ingresos Totales</div>
+                <div class="text-2xl font-bold text-gray-800">{{ stats.totalIngresos |
+                    currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
+            </div>
+            <div class="bg-emerald-100 p-3 rounded-full text-emerald-600">
+                <i class="fas fa-money-bill-wave text-xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-500 flex items-center justify-between">
+            <div>
+                <div class="text-gray-500 text-sm font-medium mb-1">Pedidos Pendientes</div>
+                <div class="text-2xl font-bold text-gray-800">{{ stats.pedidosPendientes }}</div>
+            </div>
+            <div class="bg-orange-100 p-3 rounded-full text-orange-600">
+                <i class="fas fa-clock text-xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500 flex items-center justify-between">
+            <div>
+                <div class="text-gray-500 text-sm font-medium mb-1">Clientes Activos</div>
+                <div class="text-2xl font-bold text-gray-800">{{ stats.totalClientes }}</div>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-full text-blue-600">
+                <i class="fas fa-users text-xl"></i>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500 flex items-center justify-between">
+            <div>
+                <div class="text-gray-500 text-sm font-medium mb-1">Productos en Carta</div>
+                <div class="text-2xl font-bold text-gray-800">{{ stats.totalProductos }}</div>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-full text-purple-600">
+                <i class="fas fa-birthday-cake text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-list text-gray-400"></i> Próximas Entregas
+                </h3>
+                <a routerLink="/pedidos" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver todos</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Fecha</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Cliente</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let order of stats.recentOrders" class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ order.fecha | date:'dd/MM' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ order.cliente }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span
+                                    class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full uppercase"
+                                    [ngClass]="{
+                                        'bg-yellow-100 text-yellow-800': order.estado === 'en producción',
+                                        'bg-gray-100 text-gray-800': order.estado === 'registrado',
+                                        'bg-blue-100 text-blue-800': order.estado === 'confirmado'
+                                    }">
+                                    {{ order.estado }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr *ngIf="!stats.recentOrders?.length">
+                            <td colspan="3" class="px-6 py-4 text-center text-gray-500 text-sm">No hay entregas
+                                próximas.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-trophy text-yellow-500"></i> Más Vendidos
+                </h3>
+                <a routerLink="/productos" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver todos</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Producto</th>
+                            <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase">Vendidos</th>
+                            <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Ingresos</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr *ngFor="let prod of stats.topProducts; let i = index" class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center gap-2">
+                                <span class="text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center"
+                                    [ngClass]="i === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'">
+                                    {{ i + 1 }}
+                                </span>
+                                {{ prod.nombre }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-700">
+                                {{ prod.cantidad }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-emerald-600 font-medium">
+                                {{ prod.ingresos | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                            </td>
+                        </tr>
+                        <tr *ngIf="!stats.topProducts?.length">
+                            <td colspan="3" class="px-6 py-4 text-center text-gray-500 text-sm">No hay datos de ventas
+                                aún.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,93 @@
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Libro de Recetas</h2>
+        <a routerLink="/recetas/nuevo"
+            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Nueva Receta
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Receta
+                            / Producto</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Ingredientes (Fórmula)</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Instrucciones / Notas</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr *ngIf="loading">
+                        <td colspan="4" class="px-6 py-10 text-center text-gray-500 animate-pulse">
+                            Consultando libro de recetas...
+                        </td>
+                    </tr>
+                    <tr *ngIf="!loading && recetas.length === 0">
+                        <td colspan="4" class="px-6 py-10 text-center text-gray-500">
+                            No hay recetas registradas aún.
+                        </td>
+                    </tr>
+
+                    <tr *ngFor="let receta of recetas" class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 align-top">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-gray-900 text-lg">{{ receta.nombre || 'Sin nombre'
+                                    }}</span>
+                                <span *ngIf="receta.producto"
+                                    class="inline-flex mt-2 items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 w-fit">
+                                    <i class="fas fa-box mr-1"></i> {{ receta.producto.nombre }}
+                                </span>
+                                <span *ngIf="!receta.producto" class="text-xs text-red-500 mt-1">Sin producto
+                                    vinculado</span>
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 align-top">
+                            <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                <ul class="space-y-1">
+                                    <li *ngFor="let detalle of receta.detallesReceta"
+                                        class="text-sm text-gray-700 flex justify-between border-b border-gray-200 last:border-0 pb-1 last:pb-0">
+                                        <span>{{ detalle.insumo.nombre }}</span>
+                                        <span class="font-semibold text-gray-900">{{ detalle.cantidad }} {{
+                                            detalle.insumo.unidad_medida }}</span>
+                                    </li>
+                                    <li *ngIf="!receta.detallesReceta?.length" class="text-xs text-gray-400 italic">
+                                        No hay ingredientes registrados.
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+
+                        <td class="px-6 py-4 align-top">
+                            <p class="text-sm text-gray-600 italic">{{ receta.descripcion || 'Sin observaciones
+                                adicionales.' }}</p>
+                        </td>
+
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top">
+                            <div class="flex justify-end gap-3">
+                                <a [routerLink]="['/recetas/editar', receta.id]"
+                                    class="text-indigo-600 hover:text-indigo-900 hover:underline">
+                                    Editar
+                                </a>
+                                <button (click)="deleteReceta(receta.id!)"
+                                    class="text-red-600 hover:text-red-900 hover:underline">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

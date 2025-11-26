@@ -1,8 +1,23 @@
 import { Request, Response, NextFunction } from 'express';
 import { Cobro } from '../Models/Cobro';
 import { Pedido } from '../Models/Pedido';
+import { Cliente } from '../Models/Cliente'; // <--- 1. IMPORTANTE: Importar el modelo Cliente
 
 const METODOS_VALIDOS = ['efectivo', 'debito', 'credito', 'transferencia'] as const;
+
+// Definimos el 'include' completo en una constante para no repetirlo
+const cobroInclude = [
+  {
+    model: Pedido,
+    as: 'pedido',
+    include: [
+      { 
+        model: Cliente, 
+        as: 'cliente' // <--- 2. IMPORTANTE: Pedir los datos del cliente anidados
+      }
+    ]
+  }
+];
 
 export const cobroController = {
   crearCobro: async (req: Request, res: Response, next: NextFunction) => {
@@ -24,11 +39,13 @@ export const cobroController = {
 
       const nuevoCobro = await Cobro.create({ pedido_id, monto, metodo_pago });
 
+      // Al cobrar, el pedido pasa a entregado
       pedido.estado = 'entregado';
       await pedido.save();
 
+      // Buscamos el cobro recién creado con todos los datos (incluyendo cliente)
       const cobroConPedido = await Cobro.findByPk(nuevoCobro.id, {
-        include: [{ model: Pedido, as: 'pedido' }],
+        include: cobroInclude
       });
 
       res.status(201).json({
@@ -43,7 +60,7 @@ export const cobroController = {
   listarCobros: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const cobros = await Cobro.findAll({
-        include: [{ model: Pedido, as: 'pedido' }],
+        include: cobroInclude // Usamos el include completo
       });
       res.json(cobros);
     } catch (err) {
@@ -54,7 +71,7 @@ export const cobroController = {
   obtenerCobro: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const cobro = await Cobro.findByPk(req.params.id, {
-        include: [{ model: Pedido, as: 'pedido' }],
+        include: cobroInclude // Usamos el include completo
       });
       if (!cobro) return res.status(404).json({ message: 'Cobro no encontrado' });
       res.json(cobro);

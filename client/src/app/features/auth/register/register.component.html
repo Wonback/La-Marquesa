@@ -1,0 +1,85 @@
+<div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border border-gray-100">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-blue-600 mb-2 tracking-tight">La Marquesa</h1>
+            <p class="text-gray-500">Crea tu cuenta de empleado</p>
+        </div>
+
+        <div *ngIf="error" class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded flex items-center">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <p>{{ error }}</p>
+        </div>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5">
+
+            <!-- Nombre -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-user text-gray-400"></i>
+                    </div>
+                    <input type="text" formControlName="nombre"
+                        class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                        placeholder="Juan Pérez">
+                </div>
+                <div *ngIf="registerForm.get('nombre')?.invalid && registerForm.get('nombre')?.touched"
+                    class="text-red-500 text-xs mt-1 ml-1">
+                    El nombre es requerido.
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email Corporativo</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-envelope text-gray-400"></i>
+                    </div>
+                    <input type="email" formControlName="email"
+                        class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                        placeholder="tu@lamarquesa.com">
+                </div>
+                <div *ngIf="registerForm.get('email')?.hasError('email') && registerForm.get('email')?.touched"
+                    class="text-red-500 text-xs mt-1 ml-1">
+                    Ingrese un email válido.
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-lock text-gray-400"></i>
+                    </div>
+                    <input type="password" formControlName="password"
+                        class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                        placeholder="••••••••">
+                </div>
+                <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+                    class="text-red-500 text-xs mt-1 ml-1">
+                    Mínimo 6 caracteres.
+                </div>
+            </div>
+
+            <button type="submit" [disabled]="registerForm.invalid || loading"
+                class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center mt-6 shadow-md">
+                <svg *ngIf="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+                {{ loading ? 'Creando cuenta...' : 'Registrarse' }}
+            </button>
+
+            <div class="text-center text-sm text-gray-600 mt-4">
+                ¿Ya tienes cuenta?
+                <a routerLink="/login" class="text-blue-600 hover:text-blue-800 font-bold hover:underline">Ingresa
+                    aquí</a>
+            </div>
+        </form>
+    </div>
+</div>

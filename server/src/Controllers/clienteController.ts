@@ -16,7 +16,8 @@ export const clienteController = {
               {
                 model: DetallePedido,
                 as: 'detallePedidos',
-                include: [{ model: Producto }]
+                // CORRECCIÓN AQUÍ: Agregado 'as: producto'
+                include: [{ model: Producto, as: 'producto' }]
               }
             ]
           }
@@ -39,7 +40,8 @@ export const clienteController = {
               {
                 model: DetallePedido,
                 as: 'detallePedidos',
-                include: [{ model: Producto }]
+                // CORRECCIÓN AQUÍ: Agregado 'as: producto'
+                include: [{ model: Producto, as: 'producto' }]
               }
             ]
           }

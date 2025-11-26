@@ -4,7 +4,7 @@ import { Insumo } from '../Models/Insumo';
 const checkStockCritico = (insumo: Insumo) => {
   if (insumo.stock <= insumo.stock_minimo) {
     console.warn(
-      `⚠️ ALERTA: El insumo '${insumo.nombre}' está en nivel crítico de stock. Stock actual: ${insumo.stock}, mínimo: ${insumo.stock_minimo}`
+      `⚠️ ALERTA: El insumo '${insumo.nombre}' está en nivel crítico. Stock: ${insumo.stock} ${insumo.unidad_medida}`
     );
   }
 };
@@ -12,7 +12,8 @@ const checkStockCritico = (insumo: Insumo) => {
 export const insumoController = {
   crearInsumo: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { nombre, stock, stock_minimo } = req.body;
+      // Agregamos unidad_medida al destructuring
+      const { nombre, stock, stock_minimo, unidad_medida } = req.body;
 
       if (!nombre || nombre.trim() === '') {
         return res.status(400).json({ message: 'El nombre del insumo es obligatorio' });
@@ -20,16 +21,14 @@ export const insumoController = {
       if (stock < 0) {
         return res.status(400).json({ message: 'El stock no puede ser negativo' });
       }
-      if (stock_minimo < 0) {
-        return res.status(400).json({ message: 'El stock mínimo no puede ser negativo' });
-      }
-      if (stock_minimo > stock) {
-        console.warn(
-          `⚠️ Atención: Stock mínimo (${stock_minimo}) mayor que el stock inicial (${stock}) para el insumo '${nombre}'`
-        );
-      }
-
-      const nuevoInsumo = await Insumo.create({ nombre: nombre.trim(), stock, stock_minimo });
+      
+      // Creamos incluyendo la unidad
+      const nuevoInsumo = await Insumo.create({ 
+        nombre: nombre.trim(), 
+        stock, 
+        stock_minimo,
+        unidad_medida: unidad_medida || 'u' 
+      });
 
       checkStockCritico(nuevoInsumo);
 
@@ -70,19 +69,15 @@ export const insumoController = {
         return res.status(404).json({ message: 'Insumo no encontrado' });
       }
 
-      const { nombre, stock, stock_minimo } = req.body;
+      const { nombre, stock, stock_minimo, unidad_medida } = req.body;
 
-      if (stock !== undefined && stock < 0) {
-        return res.status(400).json({ message: 'El stock no puede ser negativo' });
-      }
-      if (stock_minimo !== undefined && stock_minimo < 0) {
-        return res.status(400).json({ message: 'El stock mínimo no puede ser negativo' });
-      }
+      if (stock !== undefined && stock < 0) return res.status(400).json({ message: 'Stock negativo no permitido' });
 
       await insumo.update({
         nombre: nombre?.trim() ?? insumo.nombre,
         stock: stock ?? insumo.stock,
         stock_minimo: stock_minimo ?? insumo.stock_minimo,
+        unidad_medida: unidad_medida ?? insumo.unidad_medida // <--- Actualizamos unidad
       });
 
       checkStockCritico(insumo);
@@ -102,12 +97,8 @@ export const insumoController = {
       if (!insumo) {
         return res.status(404).json({ message: 'Insumo no encontrado' });
       }
-
       await insumo.destroy();
-
-      return res.json({
-        message: `Insumo '${insumo.nombre}' eliminado correctamente`,
-      });
+      return res.json({ message: `Insumo '${insumo.nombre}' eliminado correctamente` });
     } catch (err) {
       next(err);
     }

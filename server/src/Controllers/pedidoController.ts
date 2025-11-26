@@ -16,19 +16,27 @@ const pedidoInclude = [
     include: [
       {
         model: Producto,
+        as: 'producto',
         include: [
           {
             model: Receta,
             as: 'receta',
             include: [
-              { model: DetalleReceta, as: 'detalleRecetas', include: [{ model: Insumo, as: 'insumo' }]},
+              { 
+                model: DetalleReceta, 
+                as: 'detallesReceta', // Alias para la BD
+                include: [{ model: Insumo, as: 'insumo' }]
+              },
             ],
           },
         ],
       },
     ],
   },
-  { model: Cliente },
+  { 
+    model: Cliente,
+    as: 'cliente'  // <--- ¡ESTA ES LA LÍNEA QUE FALTABA!
+  },
 ];
 
 export const pedidoController = {
@@ -158,7 +166,8 @@ export const pedidoController = {
 
       // Verificación de stock
       for (const detalle of pedido.detallePedidos) {
-        const producto = detalle.Producto!;
+        const producto = detalle.producto!;
+        // TypeScript usa 'detalleRecetas' (definido en el Modelo)
         if (producto.es_elaborado && producto.receta?.detalleRecetas) {
           for (const dr of producto.receta.detalleRecetas) {
             const insumo = dr.insumo!;
@@ -175,7 +184,7 @@ export const pedidoController = {
 
       // Actualización de stock
       for (const detalle of pedido.detallePedidos) {
-        const producto = detalle.Producto!;
+        const producto = detalle.producto!;
         if (producto.es_elaborado && producto.receta?.detalleRecetas) {
           for (const dr of producto.receta.detalleRecetas) {
             const insumo = dr.insumo!;

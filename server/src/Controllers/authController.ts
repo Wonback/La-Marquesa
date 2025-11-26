@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 export const authController = {
   register: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { nombre, email, password } = req.body;
+      const { nombre, email, password, rol } = req.body; // Agregué rol por si quieres crear admins desde postman
 
       if (!nombre || !email || !password) {
         return res.status(400).json({ message: 'Todos los campos son obligatorios' });
@@ -15,8 +15,14 @@ export const authController = {
       const existe = await Usuario.findOne({ where: { email } });
       if (existe) return res.status(400).json({ message: 'Email ya registrado' });
 
-      const nuevoUsuario = await Usuario.create({ nombre, email, password });
-      res.status(201).json({ message: 'Usuario registrado', usuario: { id: nuevoUsuario.id, nombre, email } });
+      const nuevoUsuario = await Usuario.create({ 
+        nombre, 
+        email, 
+        password,
+        rol: rol || 'Ventas' // Por defecto Ventas si no especifican
+      });
+      
+      res.status(201).json({ message: 'Usuario registrado', user: { id: nuevoUsuario.id, nombre, email } });
     } catch (err) {
       next(err);
     }
@@ -35,11 +41,21 @@ export const authController = {
 
       const token = jwt.sign(
         { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol },
-        process.env.JWT_SECRET as string,
+        process.env.JWT_SECRET || 'secreto_super_seguro', // Fallback por si env falla
         { expiresIn: '8h' }
       );
 
-      res.json({ message: 'Login exitoso', token, usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol } });
+      // CORRECCIÓN AQUÍ: Usamos la clave 'user' para que coincida con el front
+      res.json({ 
+        message: 'Login exitoso', 
+        token, 
+        user: { // <--- CAMBIADO DE 'usuario' A 'user'
+            id: usuario.id, 
+            nombre: usuario.nombre, 
+            email: usuario.email, 
+            rol: usuario.rol 
+        } 
+      });
     } catch (err) {
       next(err);
     }

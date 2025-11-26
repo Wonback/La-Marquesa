@@ -1,0 +1,123 @@
+<div class="container mx-auto px-4 py-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">{{ isEditMode ? 'Editar Pedido' : 'Nuevo Pedido' }}</h2>
+            <p class="text-gray-500 text-sm">Registre los pedidos de los clientes para producción.</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+
+            <div *ngIf="error"
+                class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded flex items-center">
+                <i class="fas fa-exclamation-circle mr-2"></i> {{ error }}
+            </div>
+
+            <form [formGroup]="orderForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-user text-gray-400"></i>
+                            </div>
+                            <select formControlName="cliente_id"
+                                class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all bg-white">
+                                <option value="">Seleccionar Cliente...</option>
+                                <option *ngFor="let cliente of clientes" [value]="cliente.id">
+                                    {{ cliente.nombre }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Entrega *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-calendar text-gray-400"></i>
+                            </div>
+                            <input type="date" formControlName="fecha_entrega"
+                                class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-200 pt-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-shopping-basket mr-2 text-blue-500"></i> Productos
+                        </h3>
+                        <button type="button" (click)="addProduct()"
+                            class="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors font-medium border border-blue-200">
+                            <i class="fas fa-plus mr-1"></i> Agregar Producto
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl border border-gray-200 p-4"
+                        *ngIf="productosArray.controls.length === 0">
+                        <p class="text-center text-gray-500 text-sm">El carrito está vacío.</p>
+                    </div>
+
+                    <div formArrayName="productos" class="space-y-3">
+                        <div *ngFor="let item of productosArray.controls; let i=index" [formGroupName]="i"
+                            class="flex flex-col md:flex-row gap-3 items-start md:items-center p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
+
+                            <div class="flex-1 w-full">
+                                <label class="block text-xs font-bold text-gray-500 mb-1 md:hidden">Producto</label>
+                                <select formControlName="producto_id" (change)="onProductoChange(i)"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm">
+                                    <option value="">Seleccionar Producto...</option>
+                                    <option *ngFor="let prod of productos" [value]="prod.id">
+                                        {{ prod.nombre }} (${{ prod.precio }})
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="w-full md:w-32">
+                                <label class="block text-xs font-bold text-gray-500 mb-1 md:hidden">Cantidad</label>
+                                <input type="number" formControlName="cantidad" min="1" (change)="onQuantityChange()"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm text-center"
+                                    placeholder="Cant.">
+                            </div>
+
+                            <div class="w-full md:w-32 text-right font-bold text-gray-700">
+                                ${{ calculateSubtotal(i) | number:'1.0-2' }}
+                            </div>
+
+                            <button type="button" (click)="removeProduct(i)"
+                                class="text-gray-400 hover:text-red-600 p-2 rounded transition-colors">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end mt-6 items-center gap-2 text-xl">
+                        <span class="text-gray-500 font-medium">Total Estimado:</span>
+                        <span class="font-bold text-blue-600">${{ total | number:'1.0-2' }}</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-6">
+                    <a routerLink="/pedidos"
+                        class="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                        Cancelar
+                    </a>
+                    <button type="submit"
+                        class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                        [disabled]="orderForm.invalid || loading || productosArray.length === 0">
+                        <svg *ngIf="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        {{ loading ? 'Guardando...' : 'Guardar Pedido' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

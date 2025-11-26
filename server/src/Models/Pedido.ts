@@ -12,6 +12,7 @@ export class Pedido extends Model {
   // ⚡ Esta línea le dice a TS que Pedido puede tener detallePedidos
   public detallePedidos?: DetallePedido[];
   public getDetallePedidos!: HasManyGetAssociationsMixin<DetallePedido>;
+  cliente: any;
 }
 
 Pedido.init(

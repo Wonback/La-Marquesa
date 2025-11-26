@@ -1,0 +1,141 @@
+<div class="container mx-auto px-4 py-6">
+    <div class="max-w-2xl mx-auto">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">{{ isEditMode ? 'Editar Cobro' : 'Nuevo Cobro' }}</h2>
+            <p class="text-gray-500 text-sm">Finalice el proceso de venta registrando el pago.</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
+
+            <div *ngIf="error"
+                class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded flex items-center">
+                <i class="fas fa-exclamation-circle mr-2"></i> {{ error }}
+            </div>
+
+            <form [formGroup]="billingForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+                <!-- Selección de Pedido -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="pedido_id">Pedido a Cobrar
+                        *</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-receipt text-gray-400"></i>
+                        </div>
+                        <select id="pedido_id" formControlName="pedido_id" (change)="onPedidoChange()"
+                            class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all bg-white">
+                            <option value="">Seleccionar Pedido Listo...</option>
+                            <option *ngFor="let pedido of pedidos" [value]="pedido.id">
+                                #{{ pedido.id }} - {{ pedido.cliente?.nombre }}
+                            </option>
+                        </select>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Solo se muestran pedidos con estado <strong>"Listo"</strong>.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Monto -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="monto">Monto Recibido *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 font-bold">$</span>
+                            </div>
+                            <input type="number" id="monto" formControlName="monto" min="0"
+                                class="w-full pl-8 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all font-bold text-gray-800">
+                        </div>
+
+                        <!-- Feedback Visual del Total -->
+                        <div *ngIf="maxMontoPermitido > 0" class="mt-1 flex justify-between text-xs">
+                            <span class="text-gray-500">Total a pagar:</span>
+                            <span class="font-bold text-emerald-600">{{ maxMontoPermitido |
+                                currency:'ARS':'symbol-narrow':'1.0-2' }}</span>
+                        </div>
+
+                        <!-- Validación de Monto Excesivo -->
+                        <div *ngIf="billingForm.get('monto')?.hasError('max') && billingForm.get('monto')?.touched"
+                            class="text-red-500 text-xs mt-1 font-medium">
+                            El monto no puede superar el total del pedido.
+                        </div>
+                    </div>
+
+                    <!-- Fecha -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" for="fecha">Fecha de Pago *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-calendar-check text-gray-400"></i>
+                            </div>
+                            <input type="date" id="fecha" formControlName="fecha"
+                                class="w-full pl-10 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Método de Pago -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" for="metodo_pago">Método de Pago
+                        *</label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <label class="cursor-pointer">
+                            <input type="radio" formControlName="metodo_pago" value="efectivo" class="peer sr-only">
+                            <div
+                                class="rounded-lg border border-gray-200 p-3 text-center hover:bg-gray-50 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 transition-all shadow-sm">
+                                <i class="fas fa-money-bill-wave mb-1 block text-lg"></i>
+                                <span class="text-xs font-bold uppercase">Efectivo</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" formControlName="metodo_pago" value="transferencia"
+                                class="peer sr-only">
+                            <div
+                                class="rounded-lg border border-gray-200 p-3 text-center hover:bg-gray-50 peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-700 transition-all shadow-sm">
+                                <i class="fas fa-university mb-1 block text-lg"></i>
+                                <span class="text-xs font-bold uppercase">Transf.</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" formControlName="metodo_pago" value="debito" class="peer sr-only">
+                            <div
+                                class="rounded-lg border border-gray-200 p-3 text-center hover:bg-gray-50 peer-checked:border-purple-500 peer-checked:bg-purple-50 peer-checked:text-purple-700 transition-all shadow-sm">
+                                <i class="fas fa-credit-card mb-1 block text-lg"></i>
+                                <span class="text-xs font-bold uppercase">Débito</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" formControlName="metodo_pago" value="credito" class="peer sr-only">
+                            <div
+                                class="rounded-lg border border-gray-200 p-3 text-center hover:bg-gray-50 peer-checked:border-indigo-500 peer-checked:bg-indigo-50 peer-checked:text-indigo-700 transition-all shadow-sm">
+                                <i class="fas fa-credit-card mb-1 block text-lg"></i>
+                                <span class="text-xs font-bold uppercase">Crédito</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-6">
+                    <a routerLink="/cobros"
+                        class="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                        Cancelar
+                    </a>
+                    <button type="submit"
+                        class="px-5 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium flex items-center disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-200"
+                        [disabled]="billingForm.invalid || loading">
+                        <svg *ngIf="loading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
+                        <span *ngIf="!loading"><i class="fas fa-check-circle mr-2"></i> Registrar Pago</span>
+                        <span *ngIf="loading">Procesando...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

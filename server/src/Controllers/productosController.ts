@@ -9,7 +9,8 @@ const productoInclude = [
     model: Receta,
     as: 'receta',
     include: [
-      { model: DetalleReceta, as: 'detalleRecetas', include: [{ model: Insumo, as: 'insumo' }] },
+      // CORRECCIÓN AQUÍ: 'detallesReceta'
+      { model: DetalleReceta, as: 'detallesReceta', include: [{ model: Insumo, as: 'insumo' }] },
     ],
   },
 ];
@@ -18,7 +19,7 @@ interface ProductoBody {
   nombre: string;
   es_elaborado: boolean;
   precio: number;
-  receta?: { insumo_id: number; cantidad: number }[]; // para productos elaborados
+  receta?: { insumo_id: number; cantidad: number }[]; 
 }
 
 const crearProducto: RequestHandler<{}, any, ProductoBody> = async (req, res, next) => {
@@ -100,7 +101,6 @@ const eliminarProducto: RequestHandler<{ id: string }> = async (req, res, next) 
       const producto = await Producto.findByPk(req.params.id);
       if (!producto) return res.status(404).json({ message: 'Producto no encontrado' });
 
-      // Borramos receta si existe
       const rec = await Receta.findOne({ where: { producto_id: producto.id } });
       if (rec) {
         await DetalleReceta.destroy({ where: { receta_id: rec.id } });
