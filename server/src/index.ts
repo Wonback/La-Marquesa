@@ -45,7 +45,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 const port = process.env.PORT || 4000;
 app.listen(port, () => {
-  console.log(`Servidor corriendo en puerto ${port}`);
+  console.log(`Servidor corriendo en puerto ${port} - CORS habilitado para 3000 y 4200`);
 });
 
 (async () => {
