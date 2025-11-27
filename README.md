@@ -167,7 +167,7 @@ npm install
 
 Crea un archivo `.env` en la carpeta `server` con las siguientes variables:
 ```env
-PORT=3000
+PORT=4000
 DATABASE_URL=postgres://usuario:password@localhost:5432/la_marquesa_db
 JWT_SECRET=tu_secreto_super_seguro
 NODE_ENV=development
