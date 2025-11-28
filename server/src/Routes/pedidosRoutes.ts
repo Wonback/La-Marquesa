@@ -31,6 +31,15 @@ router.get(
 );
 
 router.put(
+  '/:id', 
+  authenticateJWT,
+  authorizeRoles('Ventas', 'Admin'), 
+  async (req, res, next) => {
+    await pedidoController.actualizarPedido(req, res, next);
+  }
+);
+
+router.put(
   '/:id/confirmar',
   authenticateJWT,
   authorizeRoles('Ventas', 'Admin'),

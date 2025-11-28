@@ -9,24 +9,34 @@ const productoInclude = [
     model: Receta,
     as: 'receta',
     include: [
-      // CORRECCIÓN AQUÍ: 'detallesReceta'
       { model: DetalleReceta, as: 'detallesReceta', include: [{ model: Insumo, as: 'insumo' }] },
     ],
   },
 ];
 
+// 1. CORRECCIÓN: Agregamos descripcion y stock a la interfaz
 interface ProductoBody {
   nombre: string;
   es_elaborado: boolean;
   precio: number;
+  descripcion?: string; 
+  stock?: number;
   receta?: { insumo_id: number; cantidad: number }[]; 
 }
 
 const crearProducto: RequestHandler<{}, any, ProductoBody> = async (req, res, next) => {
     try {
-      const { nombre, es_elaborado, precio, receta } = req.body;
+      // 2. CORRECCIÓN: Extraemos descripcion y stock del body
+      const { nombre, es_elaborado, precio, descripcion, stock, receta } = req.body;
 
-      const nuevoProducto = await Producto.create({ nombre, es_elaborado, precio });
+      // 3. CORRECCIÓN: Los pasamos al create
+      const nuevoProducto = await Producto.create({ 
+        nombre, 
+        es_elaborado, 
+        precio, 
+        descripcion, 
+        stock 
+      });
 
       if (es_elaborado && receta && receta.length > 0) {
         const nuevaReceta = await Receta.create({ producto_id: nuevoProducto.id });
@@ -70,8 +80,17 @@ const actualizarProducto: RequestHandler<{ id: string }, any, Partial<ProductoBo
       const producto = await Producto.findByPk(req.params.id);
       if (!producto) return res.status(404).json({ message: 'Producto no encontrado' });
 
-      const { nombre, es_elaborado, precio, receta } = req.body;
-      await producto.update({ nombre, es_elaborado, precio });
+      // 4. CORRECCIÓN: Extraemos descripcion y stock también aquí
+      const { nombre, es_elaborado, precio, descripcion, stock, receta } = req.body;
+      
+      // 5. CORRECCIÓN: Actualizamos todos los campos
+      await producto.update({ 
+        nombre, 
+        es_elaborado, 
+        precio, 
+        descripcion, 
+        stock 
+      });
 
       // Actualizamos receta si es producto elaborado
       if (es_elaborado && receta) {

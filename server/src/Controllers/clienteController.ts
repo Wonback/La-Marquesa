@@ -5,6 +5,7 @@ import { DetallePedido } from '../Models/DetallePedido';
 import { Producto } from '../Models/Producto';
 
 export const clienteController = {
+  
   listarClientes: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const clientes = await Cliente.findAll({
@@ -16,7 +17,6 @@ export const clienteController = {
               {
                 model: DetallePedido,
                 as: 'detallePedidos',
-                // CORRECCIÓN AQUÍ: Agregado 'as: producto'
                 include: [{ model: Producto, as: 'producto' }]
               }
             ]
@@ -40,7 +40,6 @@ export const clienteController = {
               {
                 model: DetallePedido,
                 as: 'detallePedidos',
-                // CORRECCIÓN AQUÍ: Agregado 'as: producto'
                 include: [{ model: Producto, as: 'producto' }]
               }
             ]
@@ -56,8 +55,16 @@ export const clienteController = {
 
   crearCliente: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { nombre, telefono, email } = req.body;
-      const nuevoCliente = await Cliente.create({ nombre, telefono, email });
+      const { nombre, telefono, email, direccion, localidad } = req.body;
+      
+      const nuevoCliente = await Cliente.create({ 
+        nombre, 
+        telefono, 
+        email, 
+        direccion, 
+        localidad 
+      });
+      
       res.status(201).json(nuevoCliente);
     } catch (err) {
       next(err);
@@ -69,8 +76,16 @@ export const clienteController = {
       const cliente = await Cliente.findByPk(req.params.id);
       if (!cliente) return res.status(404).json({ message: 'Cliente no encontrado' });
 
-      const { nombre, telefono, email } = req.body;
-      await cliente.update({ nombre, telefono, email });
+      const { nombre, telefono, email, direccion, localidad } = req.body;
+      
+      await cliente.update({ 
+        nombre, 
+        telefono, 
+        email, 
+        direccion, 
+        localidad 
+      });
+      
       res.json(cliente);
     } catch (err) {
       next(err);

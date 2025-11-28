@@ -39,7 +39,7 @@ Cliente.init(
     localidad: {
       type: DataTypes.STRING(100),
       allowNull: true,
-    },
+    },  
   },
   { sequelize, tableName: 'clientes', timestamps: false }
 );

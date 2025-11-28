@@ -34,10 +34,10 @@ export class OrderFormComponent implements OnInit {
     this.orderForm = this.fb.group({
       cliente_id: ['', [Validators.required]],
       fecha_entrega: ['', [Validators.required]],
-      // Estado inicial por defecto 'registrado' (según tu DB)
+      // Estado inicial por defecto 'registrado'
       estado: ['registrado', [Validators.required]], 
       // Array de productos
-      productos: this.fb.array([], [Validators.required]) // Validar que haya al menos 1
+      productos: this.fb.array([], [Validators.required]) 
     });
   }
 
@@ -103,7 +103,7 @@ export class OrderFormComponent implements OnInit {
     return this.fb.group({
       producto_id: [detalle?.producto_id || '', [Validators.required]],
       cantidad: [detalle?.cantidad || 1, [Validators.required, Validators.min(1)]],
-      // Guardamos el precio histórico o 0 si es nuevo (se actualizará al seleccionar)
+      // Guardamos el precio histórico o 0 si es nuevo 
       precio_unitario: [detalle?.precio_unitario || 0] 
     });
   }
@@ -158,14 +158,17 @@ export class OrderFormComponent implements OnInit {
 
     if (this.orderForm.valid) {
       this.loading = true;
+      this.error = ''; // Limpiar errores previos
+
       // Estructura final que espera el backend
       const orderData = {
         ...this.orderForm.value,
         productos: this.productosArray.value // El back espera "productos" array
       };
 
+      // CORRECCIÓN: Usamos .update() para enviar el contenido completo
       const request = this.isEditMode
-        ? this.orderService.updateStatus(this.orderId!, orderData.estado) // Ojo: Editar pedido completo requiere otro endpoint si quieres editar productos
+        ? this.orderService.update(this.orderId!, orderData) 
         : this.orderService.create(orderData);
 
       request.subscribe({
@@ -174,7 +177,7 @@ export class OrderFormComponent implements OnInit {
         },
         error: (err) => {
           console.error(err);
-          this.error = 'Error al guardar el pedido.';
+          this.error = err.error?.message || 'Error al guardar el pedido.';
           this.loading = false;
         }
       });
