@@ -40,7 +40,11 @@ export class OrderService {
   create(pedido: Pedido): Observable<Pedido> {
     return this.api.post<Pedido>('pedidos', pedido);
   }
-
+  
+  update(id: number, pedido: any): Observable<Pedido> {
+    return this.api.put<Pedido>(`pedidos/${id}`, pedido);
+  }
+  
   // Método especial para cambiar estado (Confirmar, Entregar, etc.)
   updateStatus(id: number, estado: string): Observable<Pedido> {
     return this.api.put<Pedido>(`pedidos/${id}/estado`, { estado });

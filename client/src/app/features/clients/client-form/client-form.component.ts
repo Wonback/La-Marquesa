@@ -28,7 +28,7 @@ export class ClientFormComponent implements OnInit {
       nombre: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.email]],
       telefono: [''],
-      direccion: [''],
+      direccion: [''],  
       localidad: ['']
     });
   }
