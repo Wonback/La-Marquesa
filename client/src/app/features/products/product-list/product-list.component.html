@@ -1,33 +1,59 @@
 <div class="container mx-auto px-4 py-6">
+
+    <!-- Encabezado -->
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Listado de Productos</h2>
         <a routerLink="/productos/nuevo"
             class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-md">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
             Nuevo Producto
         </a>
     </div>
 
+    <!-- Búsqueda y filtros -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+        <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                </svg>
+            </div>
+            <input type="text" [(ngModel)]="busqueda" placeholder="Buscar producto..."
+                class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition" />
+        </div>
+        <div class="flex gap-2">
+            <button (click)="filtroTipo = 'todos'"
+                [ngClass]="filtroTipo === 'todos' ? 'bg-gray-700 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                Todos
+            </button>
+            <button (click)="filtroTipo = 'elaborado'"
+                [ngClass]="filtroTipo === 'elaborado' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                Elaborados
+            </button>
+            <button (click)="filtroTipo = 'simple'"
+                [ngClass]="filtroTipo === 'simple' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                Simples
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Producto</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Composición</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Precio
-                        </th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Stock
-                        </th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Estado</th>
-                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Acciones</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Producto</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Composición</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Precio</th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Stock</th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -36,18 +62,17 @@
                             Cargando datos del sistema...
                         </td>
                     </tr>
-                    <tr *ngIf="!loading && productos.length === 0">
+                    <tr *ngIf="!loading && productosFiltrados.length === 0">
                         <td colspan="6" class="px-6 py-10 text-center text-gray-500">
-                            No se encontraron productos registrados.
+                            No se encontraron productos.
                         </td>
                     </tr>
 
-                    <tr *ngFor="let producto of productos" class="hover:bg-gray-50 transition-colors duration-150">
+                    <tr *ngFor="let producto of productosFiltrados" class="hover:bg-gray-50 transition-colors duration-150">
                         <td class="px-6 py-4">
                             <div class="flex flex-col">
                                 <span class="text-sm font-bold text-gray-900">{{ producto.nombre }}</span>
-                                <span class="text-xs text-gray-500 mt-1">{{ producto.descripcion || 'Sin descripción'
-                                    }}</span>
+                                <span class="text-xs text-gray-500 mt-1">{{ producto.descripcion || 'Sin descripción' }}</span>
                             </div>
                         </td>
 
@@ -59,8 +84,7 @@
                                 <ul class="list-disc list-inside space-y-0.5">
                                     <li *ngFor="let detalle of producto.receta.detallesReceta">
                                         {{ detalle.insumo.nombre }}
-                                        <span class="text-gray-400">({{ detalle.cantidad }} {{
-                                            detalle.insumo.unidad_medida }})</span>
+                                        <span class="text-gray-400">({{ detalle.cantidad }} {{ detalle.insumo.unidad_medida }})</span>
                                     </li>
                                 </ul>
                             </div>
@@ -75,19 +99,18 @@
 
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full" [ngClass]="{
-                                    'bg-red-100 text-red-800': producto.stock <= 5,
-                                    'bg-yellow-100 text-yellow-800': producto.stock > 5 && producto.stock <= 15,
-                                    'bg-green-100 text-green-800': producto.stock > 15
-                                }">
+                                'bg-red-100 text-red-800': producto.stock <= 5,
+                                'bg-yellow-100 text-yellow-800': producto.stock > 5 && producto.stock <= 15,
+                                'bg-green-100 text-green-800': producto.stock > 15
+                            }">
                                 {{ producto.stock }} u.
                             </span>
-                            <div *ngIf="producto.stock <= 5" class="text-[10px] text-red-600 font-bold mt-1">¡Crítico!
-                            </div>
+                            <div *ngIf="producto.stock <= 5" class="text-[10px] text-red-600 font-bold mt-1">¡Crítico!</div>
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <span [class]="producto.es_elaborado 
-                                ? 'bg-purple-100 text-purple-800 border border-purple-200' 
+                            <span [class]="producto.es_elaborado
+                                ? 'bg-purple-100 text-purple-800 border border-purple-200'
                                 : 'bg-blue-100 text-blue-800 border border-blue-200'"
                                 class="px-2 py-1 rounded-md text-xs font-medium">
                                 {{ producto.es_elaborado ? 'Elaborado' : 'Simple' }}
@@ -95,20 +118,155 @@
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex justify-end gap-3">
+                            <div class="flex justify-end gap-2">
+
+                                <!-- Producir: solo elaborados -->
+                                <button *ngIf="producto.es_elaborado && tieneReceta(producto)"
+                                    (click)="abrirModalProduccion(producto)"
+                                    title="Registrar producción"
+                                    class="p-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                    </svg>
+                                </button>
+
+                                <!-- Producir: sin receta → deshabilitado -->
+                                <button *ngIf="producto.es_elaborado && !tieneReceta(producto)"
+                                    disabled
+                                    title="Configurá la receta antes de producir"
+                                    class="p-2 rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                    </svg>
+                                </button>
+
+                                <!-- Editar -->
                                 <a [routerLink]="['/productos/editar', producto.id]"
-                                    class="text-indigo-600 hover:text-indigo-900 hover:underline">
-                                    Editar
+                                    title="Editar producto"
+                                    class="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
                                 </a>
-                                <button (click)="deleteProducto(producto.id!)"
-                                    class="text-red-600 hover:text-red-900 hover:underline">
-                                    Eliminar
+
+                                <!-- Eliminar -->
+                                <button (click)="abrirModalEliminar(producto)"
+                                    title="Eliminar producto"
+                                    class="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
                                 </button>
                             </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Modal Registrar Producción ─── -->
+<div *ngIf="modalProduccionVisible"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+    (click)="cerrarModalProduccion()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+        (click)="$event.stopPropagation()">
+
+        <div class="bg-purple-600 px-6 py-4 flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-bold text-white">Registrar Producción</h3>
+                <p class="text-purple-200 text-sm">{{ productoSeleccionado?.nombre }}</p>
+            </div>
+            <button (click)="cerrarModalProduccion()" class="text-purple-200 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="px-6 py-5">
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">¿Cuántas unidades vas a producir?</label>
+                <input type="number" min="1" [(ngModel)]="cantidadAProducir"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition" />
+            </div>
+
+            <div *ngIf="insumosNecesarios.length > 0">
+                <p class="text-sm font-semibold text-gray-600 mb-2">Insumos que se van a consumir:</p>
+                <div class="bg-gray-50 rounded-lg border border-gray-200 divide-y divide-gray-200">
+                    <div *ngFor="let ins of insumosNecesarios" class="flex justify-between items-center px-4 py-2 text-sm">
+                        <span class="text-gray-700">{{ ins.nombre }}</span>
+                        <span class="font-semibold text-purple-700">{{ ins.total }} {{ ins.unidad }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div *ngIf="errorProduccion"
+                class="mt-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+                {{ errorProduccion }}
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+            <button (click)="cerrarModalProduccion()"
+                class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors text-sm font-medium">
+                Cancelar
+            </button>
+            <button (click)="confirmarProduccion()"
+                [disabled]="produciendoLoading || cantidadAProducir <= 0"
+                class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                <svg *ngIf="produciendoLoading" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                {{ produciendoLoading ? 'Registrando...' : 'Confirmar producción' }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Modal Confirmar Eliminación ─── -->
+<div *ngIf="modalEliminarVisible"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+    (click)="cerrarModalEliminar()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden"
+        (click)="$event.stopPropagation()">
+
+        <div class="bg-red-600 px-6 py-4 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white">Eliminar Producto</h3>
+            <button (click)="cerrarModalEliminar()" class="text-red-200 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="px-6 py-5 text-center">
+            <div class="mx-auto mb-4 flex items-center justify-center w-14 h-14 rounded-full bg-red-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <p class="text-gray-700 text-sm">¿Estás seguro que querés eliminar</p>
+            <p class="text-gray-900 font-bold text-base mt-1">{{ productoAEliminar?.nombre }}?</p>
+            <p class="text-gray-400 text-xs mt-2">Esta acción no se puede deshacer.</p>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+            <button (click)="cerrarModalEliminar()"
+                class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors text-sm font-medium">
+                Cancelar
+            </button>
+            <button (click)="confirmarEliminar()"
+                [disabled]="eliminandoLoading"
+                class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                <svg *ngIf="eliminandoLoading" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                {{ eliminandoLoading ? 'Eliminando...' : 'Sí, eliminar' }}
+            </button>
         </div>
     </div>
 </div>

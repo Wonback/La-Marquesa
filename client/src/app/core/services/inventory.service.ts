@@ -19,4 +19,8 @@ export class InventoryService {
   create(insumo: Insumo): Observable<Insumo> { return this.api.post<Insumo>('insumos', insumo); }
   update(id: number, insumo: Insumo): Observable<Insumo> { return this.api.put<Insumo>(`insumos/${id}`, insumo); }
   delete(id: number): Observable<void> { return this.api.delete<void>(`insumos/${id}`); }
+
+  reponerStock(id: number, cantidad: number): Observable<any> {
+    return this.api.post<any>(`insumos/${id}/reponer`, { cantidad });
+  }
 }

@@ -91,6 +91,29 @@ export const insumoController = {
     }
   },
 
+  reponerStock: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { cantidad } = req.body;
+
+      if (!cantidad || cantidad <= 0) {
+        return res.status(400).json({ message: 'La cantidad a reponer debe ser mayor a 0' });
+      }
+
+      const insumo = await Insumo.findByPk(req.params.id);
+      if (!insumo) return res.status(404).json({ message: 'Insumo no encontrado' });
+
+      insumo.stock += cantidad;
+      await insumo.save();
+
+      return res.json({
+        message: `Stock de '${insumo.nombre}' actualizado: +${cantidad} ${insumo.unidad_medida}`,
+        data: insumo,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+
   eliminarInsumo: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const insumo = await Insumo.findByPk(req.params.id);

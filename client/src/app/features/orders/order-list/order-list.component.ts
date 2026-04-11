@@ -1,17 +1,29 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { OrderService, Pedido } from '../../../core/services/order.service';
+
+type FiltroEstado = 'todos' | 'registrado' | 'confirmado' | 'en producción' | 'listo' | 'entregado';
 
 @Component({
   selector: 'app-order-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './order-list.component.html'
 })
 export class OrderListComponent implements OnInit {
   pedidos: Pedido[] = [];
-  loading: boolean = true;
+  loading = true;
+
+  busqueda = '';
+  filtroEstado: FiltroEstado = 'todos';
+
+  errorBanner: string | null = null;
+
+  modalEliminarVisible = false;
+  pedidoAEliminar: Pedido | null = null;
+  eliminandoLoading = false;
 
   constructor(private orderService: OrderService) {}
 
@@ -23,90 +35,100 @@ export class OrderListComponent implements OnInit {
     this.loading = true;
     this.orderService.getAll().subscribe({
       next: (data) => {
-        this.pedidos = data.sort((a, b) => 
+        this.pedidos = data.sort((a, b) =>
           new Date(b.fecha_entrega).getTime() - new Date(a.fecha_entrega).getTime()
         );
         this.loading = false;
       },
-      error: (err) => {
-        console.error('Error loading orders', err);
-        this.loading = false;
-      }
+      error: () => { this.loading = false; }
     });
   }
 
+  get pedidosFiltrados(): Pedido[] {
+    return this.pedidos.filter(p => {
+      const coincideBusqueda =
+        p.cliente?.nombre?.toLowerCase().includes(this.busqueda.toLowerCase()) ||
+        p.id?.toString().includes(this.busqueda);
+      const coincideEstado = this.filtroEstado === 'todos' || p.estado === this.filtroEstado;
+      return coincideBusqueda && coincideEstado;
+    });
+  }
+
+  get contadores(): Record<string, number> {
+    const estados = ['registrado', 'confirmado', 'en producción', 'listo', 'entregado'];
+    const result: Record<string, number> = {};
+    estados.forEach(e => {
+      result[e] = this.pedidos.filter(p => p.estado === e).length;
+    });
+    return result;
+  }
+
   getStatusColor(estado: string): string {
-    const status = estado?.toLowerCase() || '';
-    switch (status) {
-      case 'registrado': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'confirmado': return 'bg-blue-100 text-blue-800 border-blue-200';
+    switch (estado?.toLowerCase()) {
+      case 'registrado':    return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'confirmado':    return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'en producción': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'listo': return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'entregado': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'listo':         return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'entregado':     return 'bg-green-100 text-green-800 border-green-200';
+      default:              return 'bg-gray-100 text-gray-800';
     }
   }
 
   calculateTotal(pedido: Pedido): number {
-    // Si el backend ya manda el total (lo agregamos en el seed), úsalo.
-    if (pedido.total !== undefined && Number(pedido.total) > 0) {
-        return Number(pedido.total);
-    }
-    
-    // Fallback: calcular sumando detalles
+    if (pedido.total !== undefined && Number(pedido.total) > 0) return Number(pedido.total);
     return pedido.detallePedidos?.reduce((acc, item) => {
       const precio = Number(item.precio_unitario) || Number(item.producto?.precio) || 0;
       return acc + (Number(item.cantidad) * precio);
     }, 0) || 0;
   }
 
-  // Función inteligente para avanzar al siguiente estado lógico
   avanzarEstado(pedido: Pedido) {
     if (!pedido.id) return;
-
-    let nuevoEstado = '';
-    switch (pedido.estado) {
-        case 'registrado': nuevoEstado = 'confirmado'; break;
-        case 'confirmado': nuevoEstado = 'en producción'; break;
-        case 'en producción': nuevoEstado = 'listo'; break;
-        case 'listo': nuevoEstado = 'entregado'; break; // Ojo: Entregado suele ser por Cobro
-        default: return; // No avanza más
-    }
-
-    // Si el estado es 'listo', avisar que el siguiente paso es cobrar
-    if (pedido.estado === 'listo') {
-        alert('El pedido ya está listo. Para pasarlo a "Entregado", regístrelo en la sección de COBROS.');
-        return;
-    }
-
+    const siguiente: Record<string, string> = {
+      'registrado':    'confirmado',
+      'confirmado':    'en producción',
+      'en producción': 'listo',
+    };
+    const nuevoEstado = siguiente[pedido.estado];
+    if (!nuevoEstado) return;
     this.cambiarEstado(pedido, nuevoEstado);
   }
 
   cambiarEstado(pedido: Pedido, nuevoEstado: string) {
     if (!pedido.id) return;
-
+    this.errorBanner = null;
     const estadoAnterior = pedido.estado;
-    // Optimista: Cambiamos visualmente ya
-    pedido.estado = nuevoEstado as any; 
+    pedido.estado = nuevoEstado as any;
 
     this.orderService.updateStatus(pedido.id, nuevoEstado).subscribe({
-      next: (pedidoActualizado) => {
-        console.log('Estado actualizado correctamente');
-      },
       error: (err) => {
-        console.error('Error al cambiar estado', err);
-        // Revertimos si falla (ej: falta stock)
-        pedido.estado = estadoAnterior; 
-        alert('No se pudo cambiar el estado: ' + (err.error?.message || 'Error desconocido'));
+        pedido.estado = estadoAnterior;
+        this.errorBanner = err.error?.message || 'No se pudo cambiar el estado del pedido.';
       }
     });
   }
 
-  deletePedido(id: number) {
-    if (confirm('¿Estás seguro de eliminar este pedido?')) {
-      this.orderService.delete(id).subscribe(() => {
+  // --- Modal Eliminación ---
+  abrirModalEliminar(pedido: Pedido) {
+    this.pedidoAEliminar = pedido;
+    this.modalEliminarVisible = true;
+  }
+
+  cerrarModalEliminar() {
+    this.modalEliminarVisible = false;
+    this.pedidoAEliminar = null;
+  }
+
+  confirmarEliminar() {
+    if (!this.pedidoAEliminar?.id) return;
+    this.eliminandoLoading = true;
+    this.orderService.delete(this.pedidoAEliminar.id).subscribe({
+      next: () => {
+        this.eliminandoLoading = false;
+        this.cerrarModalEliminar();
         this.loadPedidos();
-      });
-    }
+      },
+      error: () => { this.eliminandoLoading = false; }
+    });
   }
 }

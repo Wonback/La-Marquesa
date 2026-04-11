@@ -54,4 +54,8 @@ export class ProductService {
   delete(id: number): Observable<void> {
     return this.api.delete<void>(`productos/${id}`);
   }
+
+  registrarProduccion(id: number, cantidad: number): Observable<any> {
+    return this.api.post<any>(`productos/${id}/producir`, { cantidad });
+  }
 }

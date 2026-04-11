@@ -1,10 +1,11 @@
 <div class="container mx-auto px-4 py-6">
+
+    <!-- Encabezado -->
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Cartera de Clientes</h2>
         <a routerLink="/clientes/nuevo"
             class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-md">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
@@ -12,21 +13,30 @@
         </a>
     </div>
 
+    <!-- Buscador -->
+    <div class="mb-4">
+        <div class="relative max-w-sm">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                </svg>
+            </div>
+            <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por nombre, email o teléfono..."
+                class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition" />
+        </div>
+    </div>
+
+    <!-- Tabla -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente
-                        </th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Contacto</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Ubicación</th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Historial</th>
-                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Acciones</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Contacto</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Ubicación</th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Historial</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -35,18 +45,17 @@
                             Cargando cartera de clientes...
                         </td>
                     </tr>
-                    <tr *ngIf="!loading && clientes.length === 0">
+                    <tr *ngIf="!loading && clientesFiltrados.length === 0">
                         <td colspan="5" class="px-6 py-10 text-center text-gray-500">
-                            No hay clientes registrados.
+                            No se encontraron clientes.
                         </td>
                     </tr>
 
-                    <tr *ngFor="let cliente of clientes" class="hover:bg-gray-50 transition-colors">
+                    <tr *ngFor="let cliente of clientesFiltrados" class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
-                                    <div
-                                        class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
+                                    <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-sm">
                                         {{ getInitials(cliente.nombre) }}
                                     </div>
                                 </div>
@@ -83,20 +92,73 @@
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex justify-end gap-3">
+                            <div class="flex justify-end gap-2">
+                                <!-- Editar -->
                                 <a [routerLink]="['/clientes/editar', cliente.id]"
-                                    class="text-indigo-600 hover:text-indigo-900 hover:underline">
-                                    Editar
+                                    title="Editar cliente"
+                                    class="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
                                 </a>
-                                <button (click)="deleteCliente(cliente.id!)"
-                                    class="text-red-600 hover:text-red-900 hover:underline">
-                                    Eliminar
+                                <!-- Eliminar -->
+                                <button (click)="abrirModalEliminar(cliente)"
+                                    title="Eliminar cliente"
+                                    class="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
                                 </button>
                             </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Modal Confirmar Eliminación ─── -->
+<div *ngIf="modalEliminarVisible"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+    (click)="cerrarModalEliminar()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden"
+        (click)="$event.stopPropagation()">
+
+        <div class="bg-red-600 px-6 py-4 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white">Eliminar Cliente</h3>
+            <button (click)="cerrarModalEliminar()" class="text-red-200 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="px-6 py-5 text-center">
+            <div class="mx-auto mb-4 flex items-center justify-center w-14 h-14 rounded-full bg-red-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <p class="text-gray-700 text-sm">¿Estás seguro que querés eliminar a</p>
+            <p class="text-gray-900 font-bold text-base mt-1">{{ clienteAEliminar?.nombre }}?</p>
+            <p class="text-gray-400 text-xs mt-2">Se perderá su historial de pedidos. Esta acción no se puede deshacer.</p>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+            <button (click)="cerrarModalEliminar()"
+                class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors text-sm font-medium">
+                Cancelar
+            </button>
+            <button (click)="confirmarEliminar()"
+                [disabled]="eliminandoLoading"
+                class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                <svg *ngIf="eliminandoLoading" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                {{ eliminandoLoading ? 'Eliminando...' : 'Sí, eliminar' }}
+            </button>
         </div>
     </div>
 </div>

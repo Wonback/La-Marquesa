@@ -39,6 +39,15 @@ router.put(
   }
 );
 
+router.post(
+  '/:id/reponer',
+  authenticateJWT,
+  authorizeRoles('Admin'),
+  async (req, res, next) => {
+    await insumoController.reponerStock(req, res, next);
+  }
+);
+
 router.delete(
   '/:id',
   authenticateJWT,

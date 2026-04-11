@@ -15,4 +15,6 @@ router.put('/:id', authenticateJWT, authorizeRoles('Admin'), productoController.
 
 router.delete('/:id', authenticateJWT, authorizeRoles('Admin'), productoController.eliminarProducto);
 
+router.post('/:id/producir', authenticateJWT, authorizeRoles('Admin', 'Producción'), productoController.registrarProduccion);
+
 export default router;

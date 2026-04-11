@@ -80,24 +80,17 @@ const actualizarProducto: RequestHandler<{ id: string }, any, Partial<ProductoBo
       const producto = await Producto.findByPk(req.params.id);
       if (!producto) return res.status(404).json({ message: 'Producto no encontrado' });
 
-      // 4. CORRECCIÓN: Extraemos descripcion y stock también aquí
       const { nombre, es_elaborado, precio, descripcion, stock, receta } = req.body;
-      
-      // 5. CORRECCIÓN: Actualizamos todos los campos
-      await producto.update({ 
-        nombre, 
-        es_elaborado, 
-        precio, 
-        descripcion, 
-        stock 
-      });
 
-      // Actualizamos receta si es producto elaborado
+      // Para productos elaborados, el stock se gestiona vía /producir y confirmación de pedidos
+      const nuevoStock = producto.es_elaborado ? producto.stock : (stock ?? producto.stock);
+      await producto.update({ nombre, es_elaborado, precio, descripcion, stock: nuevoStock });
+
+      // Actualizar receta si es producto elaborado
       if (es_elaborado && receta) {
         let rec = await Receta.findOne({ where: { producto_id: producto.id } });
         if (!rec) rec = await Receta.create({ producto_id: producto.id });
 
-        // Borramos detalles anteriores y agregamos los nuevos
         await DetalleReceta.destroy({ where: { receta_id: rec.id } });
         for (const item of receta) {
           await DetalleReceta.create({
@@ -114,6 +107,53 @@ const actualizarProducto: RequestHandler<{ id: string }, any, Partial<ProductoBo
       next(err);
     }
   };
+
+const registrarProduccion: RequestHandler<{ id: string }> = async (req, res, next) => {
+  try {
+    const { cantidad } = req.body;
+
+    if (!cantidad || cantidad <= 0) {
+      return res.status(400).json({ message: 'La cantidad a producir debe ser mayor a 0' });
+    }
+
+    const producto = await Producto.findByPk(req.params.id, { include: productoInclude });
+    if (!producto) return res.status(404).json({ message: 'Producto no encontrado' });
+
+    if (!producto.es_elaborado) {
+      return res.status(400).json({ message: 'Este producto no es elaborado y no requiere producción' });
+    }
+
+    if (!producto.receta?.detallesReceta || producto.receta.detallesReceta.length === 0) {
+      return res.status(400).json({ message: 'El producto no tiene receta configurada' });
+    }
+
+    // Verificar stock de insumos
+    for (const dr of producto.receta.detallesReceta) {
+      const insumo = dr.insumo!;
+      const cantidadNecesaria = dr.cantidad * cantidad;
+      if (insumo.stock < cantidadNecesaria) {
+        return res.status(400).json({
+          message: `Stock insuficiente de '${insumo.nombre}'. Disponible: ${insumo.stock} ${insumo.unidad_medida}, necesario: ${cantidadNecesaria} ${insumo.unidad_medida}`,
+        });
+      }
+    }
+
+    // Descontar insumos y aumentar stock del producto
+    for (const dr of producto.receta.detallesReceta) {
+      const insumo = dr.insumo!;
+      insumo.stock -= dr.cantidad * cantidad;
+      await insumo.save();
+    }
+
+    producto.stock += cantidad;
+    await producto.save();
+
+    const productoActualizado = await Producto.findByPk(producto.id, { include: productoInclude });
+    res.json({ message: `Producción registrada: +${cantidad} unidades de ${producto.nombre}`, producto: productoActualizado });
+  } catch (err) {
+    next(err);
+  }
+};
 
 const eliminarProducto: RequestHandler<{ id: string }> = async (req, res, next) => {
     try {
@@ -139,4 +179,5 @@ export const productoController = {
   obtenerProducto,
   actualizarProducto,
   eliminarProducto,
+  registrarProduccion,
 };

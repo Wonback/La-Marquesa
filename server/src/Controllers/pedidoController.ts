@@ -113,16 +113,13 @@ export const pedidoController = {
     try {
       const { estado } = req.body;
       const user = (req as any).user;
-      const pedido = await Pedido.findByPk(req.params.id);
+      const pedido = await Pedido.findByPk(req.params.id, { include: pedidoInclude });
 
       if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
 
-      // --- CORRECCIÓN AQUÍ ---
-      // Si el estado que envían es el mismo que ya tiene, no hacemos nada y devolvemos OK.
       if (pedido.estado === estado) {
-         return res.json({ message: 'El estado no ha cambiado', pedido });
+        return res.json({ message: 'El estado no ha cambiado', pedido });
       }
-      // -----------------------
 
       if (!ESTADOS_VALIDOS.includes(estado)) {
         return res.status(400).json({ message: 'Estado inválido' });
@@ -136,12 +133,10 @@ export const pedidoController = {
         entregado: [],
       };
 
-      // Validación de transición
       if (!transiciones[pedido.estado].includes(estado)) {
         return res.status(400).json({ message: `No se puede pasar de '${pedido.estado}' a '${estado}'` });
       }
 
-      // Validaciones de roles (Tu código original sigue aquí)
       if (estado === 'confirmado' && !['Ventas', 'Admin'].includes(user.rol)) {
         return res.status(403).json({ message: 'Solo Ventas o Admin pueden confirmar pedidos' });
       }
@@ -153,6 +148,58 @@ export const pedidoController = {
       }
       if (estado === 'entregado' && !['Ventas', 'Admin'].includes(user.rol)) {
         return res.status(403).json({ message: 'Solo Ventas o Admin pueden entregar pedidos' });
+      }
+
+      // Al confirmar, verificar y descontar stock
+      if (estado === 'confirmado') {
+        if (!pedido.detallePedidos || pedido.detallePedidos.length === 0) {
+          return res.status(400).json({ message: 'El pedido no tiene productos y no puede confirmarse' });
+        }
+
+        // Verificación de stock
+        for (const detalle of pedido.detallePedidos) {
+          const producto = detalle.producto!;
+
+          if (producto.es_elaborado && producto.receta?.detallesReceta) {
+            for (const dr of producto.receta.detallesReceta) {
+              const insumo = dr.insumo!;
+              const cantidadUsada = dr.cantidad * detalle.cantidad;
+              if (insumo.stock < cantidadUsada) {
+                return res.status(400).json({
+                  message: `No hay stock suficiente del insumo '${insumo.nombre}'. Disponible: ${insumo.stock}, requerido: ${cantidadUsada}`,
+                });
+              }
+            }
+          } else if (!producto.es_elaborado) {
+            if (producto.stock < detalle.cantidad) {
+              return res.status(400).json({
+                message: `No hay stock suficiente del producto '${producto.nombre}'. Disponible: ${producto.stock}, requerido: ${detalle.cantidad}`,
+              });
+            }
+          }
+        }
+
+        // Descuento de stock
+        for (const detalle of pedido.detallePedidos) {
+          const producto = detalle.producto!;
+
+          if (producto.es_elaborado && producto.receta?.detallesReceta) {
+            for (const dr of producto.receta.detallesReceta) {
+              const insumo = dr.insumo!;
+              const cantidadUsada = dr.cantidad * detalle.cantidad;
+              insumo.stock -= cantidadUsada;
+              await insumo.save();
+              if (insumo.stock <= insumo.stock_minimo) {
+                console.log(`⚠️ ALERTA: El insumo ${insumo.nombre} está por debajo del stock mínimo.`);
+              }
+            }
+            producto.stock -= detalle.cantidad;
+            await producto.save();
+          } else if (!producto.es_elaborado) {
+            producto.stock -= detalle.cantidad;
+            await producto.save();
+          }
+        }
       }
 
       pedido.estado = estado;
@@ -251,9 +298,9 @@ export const pedidoController = {
       // Verificación de stock
       for (const detalle of pedido.detallePedidos) {
         const producto = detalle.producto!;
-        
-        // CORRECCIÓN 3: Cambiado 'detalleRecetas' por 'detallesReceta' (Plural)
+
         if (producto.es_elaborado && producto.receta?.detallesReceta) {
+          // Producto elaborado: verificar stock de cada insumo de la receta
           for (const dr of producto.receta.detallesReceta) {
             const insumo = dr.insumo!;
             const cantidadUsada = dr.cantidad * detalle.cantidad;
@@ -264,15 +311,22 @@ export const pedidoController = {
               });
             }
           }
+        } else if (!producto.es_elaborado) {
+          // Producto de mercadería: verificar stock directo del producto
+          if (producto.stock < detalle.cantidad) {
+            return res.status(400).json({
+              message: `No hay stock suficiente del producto '${producto.nombre}'. Disponible: ${producto.stock}, requerido: ${detalle.cantidad}`,
+            });
+          }
         }
       }
 
       // Actualización de stock
       for (const detalle of pedido.detallePedidos) {
         const producto = detalle.producto!;
-        
-        // CORRECCIÓN 4: Cambiado 'detalleRecetas' por 'detallesReceta' (Plural)
+
         if (producto.es_elaborado && producto.receta?.detallesReceta) {
+          // Producto elaborado: descontar insumos de la receta y el stock del producto
           for (const dr of producto.receta.detallesReceta) {
             const insumo = dr.insumo!;
             const cantidadUsada = dr.cantidad * detalle.cantidad;
@@ -284,6 +338,13 @@ export const pedidoController = {
               console.log(`⚠️ ALERTA: El insumo ${insumo.nombre} está por debajo del stock mínimo.`);
             }
           }
+
+          producto.stock -= detalle.cantidad;
+          await producto.save();
+        } else if (!producto.es_elaborado) {
+          // Producto de mercadería: descontar stock directo del producto
+          producto.stock -= detalle.cantidad;
+          await producto.save();
         }
       }
 

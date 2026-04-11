@@ -1,17 +1,24 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { RecipeService, Receta } from '../../../core/services/recipe.service';
 
 @Component({
   selector: 'app-recipe-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './recipe-list.component.html'
 })
 export class RecipeListComponent implements OnInit {
   recetas: Receta[] = [];
-  loading: boolean = true;
+  loading = true;
+
+  busqueda = '';
+
+  modalEliminarVisible = false;
+  recetaAEliminar: Receta | null = null;
+  eliminandoLoading = false;
 
   constructor(private recipeService: RecipeService) {}
 
@@ -22,24 +29,39 @@ export class RecipeListComponent implements OnInit {
   loadRecetas() {
     this.loading = true;
     this.recipeService.getAll().subscribe({
-      next: (data) => {
-        this.recetas = data;
-        this.loading = false;
-        // Debug: Descomenta esto si no ves ingredientes para ver qué llega del back
-        // console.log(data); 
-      },
-      error: (err) => {
-        console.error('Error cargando recetas', err);
-        this.loading = false;
-      }
+      next: (data) => { this.recetas = data; this.loading = false; },
+      error: () => { this.loading = false; }
     });
   }
 
-  deleteReceta(id: number) {
-    if (confirm('¿Estás seguro de eliminar esta receta? Esto no eliminará el producto asociado.')) {
-      this.recipeService.delete(id).subscribe(() => {
+  get recetasFiltradas(): Receta[] {
+    const q = this.busqueda.toLowerCase();
+    return this.recetas.filter(r =>
+      r.nombre?.toLowerCase().includes(q) ||
+      r.producto?.nombre.toLowerCase().includes(q)
+    );
+  }
+
+  abrirModalEliminar(receta: Receta) {
+    this.recetaAEliminar = receta;
+    this.modalEliminarVisible = true;
+  }
+
+  cerrarModalEliminar() {
+    this.modalEliminarVisible = false;
+    this.recetaAEliminar = null;
+  }
+
+  confirmarEliminar() {
+    if (!this.recetaAEliminar?.id) return;
+    this.eliminandoLoading = true;
+    this.recipeService.delete(this.recetaAEliminar.id).subscribe({
+      next: () => {
+        this.eliminandoLoading = false;
+        this.cerrarModalEliminar();
         this.loadRecetas();
-      });
-    }
+      },
+      error: () => { this.eliminandoLoading = false; }
+    });
   }
 }

@@ -1,10 +1,11 @@
 <div class="container mx-auto px-4 py-6">
+
+    <!-- Encabezado -->
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Registro de Cobros</h2>
         <a routerLink="/cobros/nuevo"
             class="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2 shadow-md">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -12,21 +13,58 @@
         </a>
     </div>
 
+    <!-- Búsqueda y filtros -->
+    <div class="flex flex-col sm:flex-row gap-3 mb-4">
+        <div class="relative flex-1 max-w-xs">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                </svg>
+            </div>
+            <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por cliente o #pedido..."
+                class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition" />
+        </div>
+        <div class="flex gap-2">
+            <button (click)="filtroMetodo = 'todos'"
+                [ngClass]="filtroMetodo === 'todos' ? 'bg-gray-700 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                Todos
+            </button>
+            <button (click)="filtroMetodo = 'efectivo'"
+                [ngClass]="filtroMetodo === 'efectivo' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                Efectivo
+            </button>
+            <button (click)="filtroMetodo = 'transferencia'"
+                [ngClass]="filtroMetodo === 'transferencia' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                Transferencia
+            </button>
+            <button (click)="filtroMetodo = 'debito'"
+                [ngClass]="filtroMetodo === 'debito' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                Débito
+            </button>
+            <button (click)="filtroMetodo = 'credito'"
+                [ngClass]="filtroMetodo === 'credito' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors">
+                Crédito
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabla -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ID /
-                            Pedido</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente
-                        </th>
-                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Método</th>
-                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Monto
-                            Total</th>
-                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Acciones</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ID / Pedido</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Fecha</th>
+                        <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Método</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Monto</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -35,13 +73,13 @@
                             Consultando registros financieros...
                         </td>
                     </tr>
-                    <tr *ngIf="!loading && cobros.length === 0">
+                    <tr *ngIf="!loading && cobrosFiltrados.length === 0">
                         <td colspan="6" class="px-6 py-10 text-center text-gray-500">
-                            No hay cobros registrados.
+                            No se encontraron cobros.
                         </td>
                     </tr>
 
-                    <tr *ngFor="let cobro of cobros" class="hover:bg-gray-50 transition-colors">
+                    <tr *ngFor="let cobro of cobrosFiltrados" class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex flex-col">
                                 <span class="text-xs text-gray-400">Cobro #{{ cobro.id }}</span>
@@ -56,9 +94,12 @@
                             {{ cobro.pedido?.cliente?.nombre || 'Cliente Eventual' }}
                         </td>
 
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {{ cobro.fecha | date:'dd/MM/yyyy' }}
+                        </td>
+
                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <span
-                                class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize border"
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize border"
                                 [ngClass]="getPaymentMethodClass(cobro.metodo_pago)">
                                 <i class="fas mr-1 mt-0.5" [ngClass]="getPaymentIcon(cobro.metodo_pago)"></i>
                                 {{ cobro.metodo_pago }}
@@ -69,18 +110,87 @@
                             {{ cobro.monto | currency:'ARS':'symbol-narrow':'1.0-2' }}
                         </td>
 
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex justify-end gap-3">
-                                <button (click)="deleteCobro(cobro.id!)"
-                                    class="text-gray-400 hover:text-red-600 transition-colors"
-                                    title="Eliminar registro">
-                                    <i class="fas fa-trash"></i>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="flex justify-end">
+                                <button (click)="abrirModalEliminar(cobro)"
+                                    title="Eliminar cobro"
+                                    class="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
                                 </button>
                             </div>
                         </td>
                     </tr>
+
+                    <!-- Fila de total -->
+                    <tr *ngIf="!loading && cobrosFiltrados.length > 0" class="bg-emerald-50 border-t-2 border-emerald-200">
+                        <td colspan="4" class="px-6 py-3 text-sm font-semibold text-emerald-800">
+                            Total ({{ cobrosFiltrados.length }} cobro{{ cobrosFiltrados.length !== 1 ? 's' : '' }})
+                        </td>
+                        <td class="px-6 py-3 text-right text-sm font-bold text-emerald-800">
+                            {{ totalFiltrado | currency:'ARS':'symbol-narrow':'1.0-2' }}
+                        </td>
+                        <td></td>
+                    </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Modal Confirmar Eliminación ─── -->
+<div *ngIf="modalEliminarVisible"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+    (click)="cerrarModalEliminar()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden"
+        (click)="$event.stopPropagation()">
+
+        <div class="bg-red-600 px-6 py-4 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white">Eliminar Cobro</h3>
+            <button (click)="cerrarModalEliminar()" class="text-red-200 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="px-6 py-5 text-center">
+            <div class="mx-auto mb-4 flex items-center justify-center w-14 h-14 rounded-full bg-red-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <p class="text-gray-700 text-sm">¿Estás seguro que querés eliminar el cobro</p>
+            <p class="text-gray-900 font-bold text-base mt-1">
+                #{{ cobroAEliminar?.id }} — {{ cobroAEliminar?.monto | currency:'ARS':'symbol-narrow':'1.0-2' }}
+            </p>
+
+            <!-- Advertencia destacada -->
+            <div class="mt-4 bg-yellow-50 border border-yellow-300 rounded-lg px-4 py-3 text-left flex gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <p class="text-yellow-800 text-xs">
+                    El pedido <strong>#{{ cobroAEliminar?.pedido_id }}</strong> quedará en estado <strong>"entregado"</strong> y no se revertirá automáticamente.
+                </p>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+            <button (click)="cerrarModalEliminar()"
+                class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors text-sm font-medium">
+                Cancelar
+            </button>
+            <button (click)="confirmarEliminar()"
+                [disabled]="eliminandoLoading"
+                class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                <svg *ngIf="eliminandoLoading" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                {{ eliminandoLoading ? 'Eliminando...' : 'Sí, eliminar' }}
+            </button>
         </div>
     </div>
 </div>

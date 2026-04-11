@@ -1,29 +1,40 @@
 <div class="container mx-auto px-4 py-6">
+
+    <!-- Encabezado -->
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Libro de Recetas</h2>
         <a routerLink="/recetas/nuevo"
             class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-md">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
             Nueva Receta
         </a>
     </div>
 
+    <!-- Buscador -->
+    <div class="mb-4">
+        <div class="relative max-w-sm">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                </svg>
+            </div>
+            <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por receta o producto..."
+                class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition" />
+        </div>
+    </div>
+
+    <!-- Tabla -->
     <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Receta
-                            / Producto</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Ingredientes (Fórmula)</th>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Instrucciones / Notas</th>
-                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            Acciones</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Receta / Producto</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Ingredientes (Fórmula)</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Instrucciones / Notas</th>
+                        <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -32,23 +43,21 @@
                             Consultando libro de recetas...
                         </td>
                     </tr>
-                    <tr *ngIf="!loading && recetas.length === 0">
+                    <tr *ngIf="!loading && recetasFiltradas.length === 0">
                         <td colspan="4" class="px-6 py-10 text-center text-gray-500">
-                            No hay recetas registradas aún.
+                            No se encontraron recetas.
                         </td>
                     </tr>
 
-                    <tr *ngFor="let receta of recetas" class="hover:bg-gray-50 transition-colors">
+                    <tr *ngFor="let receta of recetasFiltradas" class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4 align-top">
                             <div class="flex flex-col">
-                                <span class="text-sm font-bold text-gray-900 text-lg">{{ receta.nombre || 'Sin nombre'
-                                    }}</span>
+                                <span class="text-sm font-bold text-gray-900">{{ receta.nombre || 'Sin nombre' }}</span>
                                 <span *ngIf="receta.producto"
                                     class="inline-flex mt-2 items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 w-fit">
                                     <i class="fas fa-box mr-1"></i> {{ receta.producto.nombre }}
                                 </span>
-                                <span *ngIf="!receta.producto" class="text-xs text-red-500 mt-1">Sin producto
-                                    vinculado</span>
+                                <span *ngIf="!receta.producto" class="text-xs text-red-500 mt-1">Sin producto vinculado</span>
                             </div>
                         </td>
 
@@ -58,8 +67,7 @@
                                     <li *ngFor="let detalle of receta.detallesReceta"
                                         class="text-sm text-gray-700 flex justify-between border-b border-gray-200 last:border-0 pb-1 last:pb-0">
                                         <span>{{ detalle.insumo.nombre }}</span>
-                                        <span class="font-semibold text-gray-900">{{ detalle.cantidad }} {{
-                                            detalle.insumo.unidad_medida }}</span>
+                                        <span class="font-semibold text-gray-900">{{ detalle.cantidad }} {{ detalle.insumo.unidad_medida }}</span>
                                     </li>
                                     <li *ngIf="!receta.detallesReceta?.length" class="text-xs text-gray-400 italic">
                                         No hay ingredientes registrados.
@@ -69,25 +77,77 @@
                         </td>
 
                         <td class="px-6 py-4 align-top">
-                            <p class="text-sm text-gray-600 italic">{{ receta.descripcion || 'Sin observaciones
-                                adicionales.' }}</p>
+                            <p class="text-sm text-gray-600 italic">{{ receta.descripcion || 'Sin observaciones adicionales.' }}</p>
                         </td>
 
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top">
-                            <div class="flex justify-end gap-3">
+                        <td class="px-6 py-4 whitespace-nowrap text-right align-top">
+                            <div class="flex justify-end gap-2">
+                                <!-- Editar -->
                                 <a [routerLink]="['/recetas/editar', receta.id]"
-                                    class="text-indigo-600 hover:text-indigo-900 hover:underline">
-                                    Editar
+                                    title="Editar receta"
+                                    class="p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
                                 </a>
-                                <button (click)="deleteReceta(receta.id!)"
-                                    class="text-red-600 hover:text-red-900 hover:underline">
-                                    Eliminar
+                                <!-- Eliminar -->
+                                <button (click)="abrirModalEliminar(receta)"
+                                    title="Eliminar receta"
+                                    class="p-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
                                 </button>
                             </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Modal Confirmar Eliminación ─── -->
+<div *ngIf="modalEliminarVisible"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+    (click)="cerrarModalEliminar()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden"
+        (click)="$event.stopPropagation()">
+
+        <div class="bg-red-600 px-6 py-4 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white">Eliminar Receta</h3>
+            <button (click)="cerrarModalEliminar()" class="text-red-200 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="px-6 py-5 text-center">
+            <div class="mx-auto mb-4 flex items-center justify-center w-14 h-14 rounded-full bg-red-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+            <p class="text-gray-700 text-sm">¿Estás seguro que querés eliminar la receta</p>
+            <p class="text-gray-900 font-bold text-base mt-1">{{ recetaAEliminar?.nombre }}?</p>
+            <p class="text-gray-400 text-xs mt-2">El producto vinculado no se eliminará, pero quedará sin receta configurada.</p>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+            <button (click)="cerrarModalEliminar()"
+                class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors text-sm font-medium">
+                Cancelar
+            </button>
+            <button (click)="confirmarEliminar()"
+                [disabled]="eliminandoLoading"
+                class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                <svg *ngIf="eliminandoLoading" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                {{ eliminandoLoading ? 'Eliminando...' : 'Sí, eliminar' }}
+            </button>
         </div>
     </div>
 </div>

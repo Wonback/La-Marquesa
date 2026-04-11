@@ -17,21 +17,24 @@ export const dashboardController = {
       const cobros = await Cobro.findAll();
       const totalIngresos = cobros.reduce((sum, cobro) => sum + Number(cobro.monto), 0);
 
-      const pedidosPendientes = await Pedido.count({ where: { estado: 'registrado' } }); // Ojo con los nombres de estados
+      const pedidosPendientes = await Pedido.count({ where: { estado: ['registrado', 'confirmado', 'en producción', 'listo'] } });
       const pedidosEntregados = await Pedido.count({ where: { estado: 'entregado' } });
 
       // 2. Pedidos Recientes (Últimos 5)
       const recentOrdersRaw = await Pedido.findAll({
         limit: 5,
-        order: [['fecha_entrega', 'ASC']], // Los próximos a entregar
-        where: { estado: ['registrado', 'confirmado', 'en producción'] }, // Solo activos
-        include: [{ model: Cliente, as: 'cliente' }]
+        order: [['fecha_entrega', 'ASC']],
+        where: { estado: ['registrado', 'confirmado', 'en producción'] },
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: DetallePedido, as: 'detallePedidos' }
+        ]
       });
 
       const recentOrders = recentOrdersRaw.map(p => ({
         id: p.id,
         cliente: p.cliente?.nombre || 'Anónimo',
-        total: 0, // Aquí podrías sumar los detalles si tuvieras el total en la tabla
+        total: (p as any).detallePedidos?.reduce((sum: number, d: any) => sum + Number(d.subtotal), 0) ?? 0,
         estado: p.estado,
         fecha: p.fecha_entrega
       }));
