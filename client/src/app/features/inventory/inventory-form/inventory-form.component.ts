@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { InventoryService } from '../../../core/services/inventory.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-inventory-form',
@@ -21,7 +22,8 @@ export class InventoryFormComponent implements OnInit {
     private fb: FormBuilder,
     private inventoryService: InventoryService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toast: ToastService
   ) {
     this.inventoryForm = this.fb.group({
       nombre: ['', [Validators.required]],
@@ -67,11 +69,13 @@ export class InventoryFormComponent implements OnInit {
 
       request.subscribe({
         next: () => {
+          this.toast.success(this.isEditMode ? 'Insumo actualizado correctamente.' : 'Insumo creado correctamente.');
           this.router.navigate(['/insumos']);
         },
         error: (err) => {
           console.error(err);
           this.error = 'Ocurrió un error al guardar el insumo.';
+          this.toast.error(this.error);
           this.loading = false;
         }
       });

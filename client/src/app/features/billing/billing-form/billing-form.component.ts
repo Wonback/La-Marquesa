@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { BillingService } from '../../../core/services/billing.service';
 import { OrderService, Pedido } from '../../../core/services/order.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-billing-form',
@@ -26,7 +27,8 @@ export class BillingFormComponent implements OnInit {
     private billingService: BillingService,
     private orderService: OrderService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toast: ToastService
   ) {
     this.billingForm = this.fb.group({
       pedido_id: ['', [Validators.required]],
@@ -37,26 +39,35 @@ export class BillingFormComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadPedidos();
-
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.cobroId = Number(idParam);
       this.isEditMode = true;
       this.loadCobro(this.cobroId);
     }
+
+    const pedidoParam = this.route.snapshot.queryParamMap.get('pedido');
+    const pedidoPreselect = pedidoParam ? Number(pedidoParam) : null;
+
+    this.loadPedidos(pedidoPreselect);
   }
 
-  loadPedidos() {
+  loadPedidos(pedidoPreselect: number | null = null) {
     this.orderService.getAll().subscribe(data => {
-      // 1. Filtramos: Solo pedidos "listos"
       const pedidosListos = data.filter(p => p.estado === 'listo' || (this.isEditMode && p.id === this.billingForm.value.pedido_id));
-      
-      // 2. Calculamos el total para cada uno AQUÍ, para que se vea en el select
+
       this.pedidos = pedidosListos.map(p => ({
         ...p,
-        total: this.calculateOrderTotal(p) // Forzamos el cálculo
+        total: this.calculateOrderTotal(p)
       }));
+
+      if (pedidoPreselect) {
+        const existe = this.pedidos.find(p => p.id === pedidoPreselect);
+        if (existe) {
+          this.billingForm.patchValue({ pedido_id: pedidoPreselect });
+          this.onPedidoChange();
+        }
+      }
     });
   }
 
@@ -129,11 +140,13 @@ export class BillingFormComponent implements OnInit {
 
       request.subscribe({
         next: () => {
+          this.toast.success(this.isEditMode ? 'Cobro actualizado correctamente.' : 'Cobro registrado correctamente.');
           this.router.navigate(['/cobros']);
         },
         error: (err) => {
           console.error(err);
           this.error = 'Error al registrar el cobro.';
+          this.toast.error('Error al registrar el cobro.');
           this.loading = false;
         }
       });

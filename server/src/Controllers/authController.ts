@@ -41,7 +41,7 @@ export const authController = {
 
       const token = jwt.sign(
         { id: usuario.id, nombre: usuario.nombre, rol: usuario.rol },
-        process.env.JWT_SECRET || 'secreto_super_seguro', // Fallback por si env falla
+        process.env.JWT_SECRET as string,
         { expiresIn: '8h' }
       );
 

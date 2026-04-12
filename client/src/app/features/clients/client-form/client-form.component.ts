@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ClientService } from '../../../core/services/client.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-client-form',
@@ -21,7 +22,8 @@ export class ClientFormComponent implements OnInit {
     private fb: FormBuilder,
     private clientService: ClientService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toast: ToastService
   ) {
     this.clientForm = this.fb.group({
       // Validaciones: Nombre requerido, Email con formato válido
@@ -71,12 +73,13 @@ export class ClientFormComponent implements OnInit {
 
       request.subscribe({
         next: () => {
-          // Redirigir a la lista tras guardar
+          this.toast.success(this.isEditMode ? 'Cliente actualizado correctamente.' : 'Cliente creado correctamente.');
           this.router.navigate(['/clientes']);
         },
         error: (err) => {
           console.error(err);
           this.error = 'Ocurrió un error al guardar los datos. Intente nuevamente.';
+          this.toast.error(this.error);
           this.loading = false;
         }
       });

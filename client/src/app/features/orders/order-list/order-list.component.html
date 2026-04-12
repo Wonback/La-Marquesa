@@ -13,7 +13,23 @@
         </a>
     </div>
 
-    <!-- Error banner -->
+    <!-- Banner: pedidos vencidos -->
+    <div *ngIf="!loading && pedidosVencidos.length > 0"
+        class="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-3 flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-sm font-medium">
+            <strong>{{ pedidosVencidos.length }} {{ pedidosVencidos.length === 1 ? 'pedido vencido' : 'pedidos vencidos' }}</strong>
+            — la fecha de entrega ya pasó y todavía no fueron entregados.
+        </span>
+        <button (click)="filtroEstado = 'pendientes'; busqueda = ''; paginaActual = 1"
+                class="ml-auto text-xs font-semibold underline hover:no-underline shrink-0">
+            Ver pendientes
+        </button>
+    </div>
+
+    <!-- Banner: error de estado -->
     <div *ngIf="errorBanner"
         class="mb-4 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -37,45 +53,34 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
                 </svg>
             </div>
-            <input type="text" [(ngModel)]="busqueda" placeholder="Buscar por cliente o #ID..."
+            <input type="text" [(ngModel)]="busqueda" (ngModelChange)="paginaActual = 1" placeholder="Buscar por cliente o #ID..."
                 class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition" />
         </div>
 
         <!-- Filtros por estado -->
         <div class="flex flex-wrap gap-2">
-            <button (click)="filtroEstado = 'todos'"
+
+            <!-- Pendientes (default) -->
+            <button (click)="filtroEstado = 'pendientes'; paginaActual = 1"
+                [ngClass]="filtroEstado === 'pendientes' ? 'bg-gray-700 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
+                Pendientes
+                <span *ngIf="contadores['pendientes'] > 0" class="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                    [ngClass]="filtroEstado === 'pendientes' ? 'bg-gray-500 text-white' : 'bg-gray-100 text-gray-600'">
+                    {{ contadores['pendientes'] }}
+                </span>
+            </button>
+
+            <!-- Todos -->
+            <button (click)="filtroEstado = 'todos'; paginaActual = 1"
                 [ngClass]="filtroEstado === 'todos' ? 'bg-gray-700 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
                 class="px-3 py-2 rounded-lg text-xs font-medium transition-colors">
                 Todos
             </button>
-            <button (click)="filtroEstado = 'registrado'"
-                [ngClass]="filtroEstado === 'registrado' ? 'bg-gray-500 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
-                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
-                Registrado
-                <span *ngIf="contadores['registrado'] > 0" class="text-xs font-bold px-1.5 py-0.5 rounded-full"
-                    [ngClass]="filtroEstado === 'registrado' ? 'bg-gray-400 text-white' : 'bg-gray-100 text-gray-600'">
-                    {{ contadores['registrado'] }}
-                </span>
-            </button>
-            <button (click)="filtroEstado = 'confirmado'"
-                [ngClass]="filtroEstado === 'confirmado' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
-                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
-                Confirmado
-                <span *ngIf="contadores['confirmado'] > 0" class="text-xs font-bold px-1.5 py-0.5 rounded-full"
-                    [ngClass]="filtroEstado === 'confirmado' ? 'bg-blue-400 text-white' : 'bg-blue-100 text-blue-700'">
-                    {{ contadores['confirmado'] }}
-                </span>
-            </button>
-            <button (click)="filtroEstado = 'en producción'"
-                [ngClass]="filtroEstado === 'en producción' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
-                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
-                En producción
-                <span *ngIf="contadores['en producción'] > 0" class="text-xs font-bold px-1.5 py-0.5 rounded-full"
-                    [ngClass]="filtroEstado === 'en producción' ? 'bg-yellow-300 text-yellow-900' : 'bg-yellow-100 text-yellow-700'">
-                    {{ contadores['en producción'] }}
-                </span>
-            </button>
-            <button (click)="filtroEstado = 'listo'"
+
+            <div class="w-px bg-gray-200 self-stretch mx-1"></div>
+
+            <button (click)="filtroEstado = 'listo'; paginaActual = 1"
                 [ngClass]="filtroEstado === 'listo' ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
                 class="px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
                 Listo
@@ -84,7 +89,38 @@
                     {{ contadores['listo'] }}
                 </span>
             </button>
-            <button (click)="filtroEstado = 'entregado'"
+
+            <button (click)="filtroEstado = 'en producción'; paginaActual = 1"
+                [ngClass]="filtroEstado === 'en producción' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
+                En producción
+                <span *ngIf="contadores['en producción'] > 0" class="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                    [ngClass]="filtroEstado === 'en producción' ? 'bg-yellow-300 text-yellow-900' : 'bg-yellow-100 text-yellow-700'">
+                    {{ contadores['en producción'] }}
+                </span>
+            </button>
+
+            <button (click)="filtroEstado = 'confirmado'; paginaActual = 1"
+                [ngClass]="filtroEstado === 'confirmado' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
+                Confirmado
+                <span *ngIf="contadores['confirmado'] > 0" class="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                    [ngClass]="filtroEstado === 'confirmado' ? 'bg-blue-400 text-white' : 'bg-blue-100 text-blue-700'">
+                    {{ contadores['confirmado'] }}
+                </span>
+            </button>
+
+            <button (click)="filtroEstado = 'registrado'; paginaActual = 1"
+                [ngClass]="filtroEstado === 'registrado' ? 'bg-gray-500 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
+                class="px-3 py-2 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
+                Registrado
+                <span *ngIf="contadores['registrado'] > 0" class="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                    [ngClass]="filtroEstado === 'registrado' ? 'bg-gray-400 text-white' : 'bg-gray-100 text-gray-600'">
+                    {{ contadores['registrado'] }}
+                </span>
+            </button>
+
+            <button (click)="filtroEstado = 'entregado'; paginaActual = 1"
                 [ngClass]="filtroEstado === 'entregado' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
                 class="px-3 py-2 rounded-lg text-xs font-medium transition-colors">
                 Entregado
@@ -98,7 +134,7 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ID / Fecha</th>
+                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">ID / Entrega</th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Cliente</th>
                         <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Detalle</th>
                         <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Estado</th>
@@ -114,18 +150,26 @@
                         <td colspan="6" class="px-6 py-10 text-center text-gray-500">No se encontraron pedidos.</td>
                     </tr>
 
-                    <tr *ngFor="let pedido of pedidosFiltrados" class="hover:bg-gray-50 transition-colors">
+                    <tr *ngFor="let pedido of pedidosPaginados"
+                        class="transition-colors hover:brightness-95"
+                        [ngClass]="getDiasInfo(pedido).rowClases || 'hover:bg-gray-50'">
+
+                        <!-- ID / Entrega -->
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex flex-col">
+                            <div class="flex flex-col gap-0.5">
                                 <span class="text-xs font-mono text-gray-400">#{{ pedido.id }}</span>
-                                <span class="text-sm font-bold text-gray-900">{{ pedido.fecha_entrega | date:'dd/MM/yyyy' }}</span>
+                                <span class="text-sm font-semibold" [ngClass]="getDiasInfo(pedido).labelClases">
+                                    {{ getDiasInfo(pedido).label }}
+                                </span>
                             </div>
                         </td>
 
+                        <!-- Cliente -->
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900">{{ pedido.cliente?.nombre || 'Eventual' }}</div>
                         </td>
 
+                        <!-- Detalle -->
                         <td class="px-6 py-4">
                             <div class="flex flex-col gap-1">
                                 <div *ngFor="let detalle of pedido.detallePedidos" class="text-xs text-gray-700">
@@ -134,21 +178,32 @@
                             </div>
                         </td>
 
+                        <!-- Estado + badge Urgente -->
                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full uppercase tracking-wide border"
-                                [ngClass]="getStatusColor(pedido.estado)">
-                                {{ pedido.estado }}
-                            </span>
+                            <div class="flex flex-col items-center gap-1">
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full uppercase tracking-wide border"
+                                    [ngClass]="getStatusColor(pedido.estado)">
+                                    {{ pedido.estado }}
+                                </span>
+                                <span *ngIf="isUrgente(pedido)"
+                                    class="text-xs font-bold text-red-600 uppercase tracking-wide flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Urgente
+                                </span>
+                            </div>
                         </td>
 
+                        <!-- Total -->
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900">
                             {{ calculateTotal(pedido) | currency:'ARS':'symbol-narrow':'1.0-0' }}
                         </td>
 
+                        <!-- Acciones -->
                         <td class="px-6 py-4 whitespace-nowrap text-right">
                             <div class="flex justify-end items-center gap-2">
 
-                                <!-- Avanzar estado -->
                                 <button *ngIf="pedido.estado === 'registrado'" (click)="avanzarEstado(pedido)"
                                     title="Confirmar pedido"
                                     class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200 transition-colors flex items-center gap-1">
@@ -177,8 +232,10 @@
                                     Listo
                                 </button>
 
-                                <!-- Pedido listo: ir a cobros -->
-                                <a *ngIf="pedido.estado === 'listo'" routerLink="/cobros/nuevo"
+                                <!-- Cobrar -->
+                                <a *ngIf="pedido.estado === 'listo'"
+                                    [routerLink]="['/cobros/nuevo']"
+                                    [queryParams]="{ pedido: pedido.id }"
                                     title="Registrar cobro para entregar"
                                     class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-100 text-green-700 hover:bg-green-200 border border-green-200 transition-colors flex items-center gap-1">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -210,6 +267,24 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+        <!-- Paginación -->
+        <div *ngIf="!loading && totalPaginas > 1"
+            class="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50 text-sm">
+            <span class="text-gray-500">
+                Página {{ paginaActual }} de {{ totalPaginas }}
+                <span class="text-gray-400">· {{ pedidosFiltrados.length }} resultado{{ pedidosFiltrados.length !== 1 ? 's' : '' }}</span>
+            </span>
+            <div class="flex gap-2">
+                <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1"
+                    class="px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium">
+                    ← Anterior
+                </button>
+                <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas"
+                    class="px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium">
+                    Siguiente →
+                </button>
+            </div>
         </div>
     </div>
 </div>

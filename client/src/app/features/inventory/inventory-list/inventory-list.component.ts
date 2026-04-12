@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { InventoryService, Insumo } from '../../../core/services/inventory.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 type FiltroEstado = 'todos' | 'critico' | 'bajo' | 'normal';
 
@@ -32,7 +33,10 @@ export class InventoryListComponent implements OnInit {
   eliminandoLoading = false;
   errorEliminar: string | null = null;
 
-  constructor(private inventoryService: InventoryService) {}
+  paginaActual = 1;
+  readonly itemsPorPagina = 10;
+
+  constructor(private inventoryService: InventoryService, private toast: ToastService) {}
 
   ngOnInit() {
     this.loadInsumos();
@@ -50,6 +54,19 @@ export class InventoryListComponent implements OnInit {
     if (insumo.stock <= insumo.stock_minimo) return 'critico';
     if (insumo.stock <= insumo.stock_minimo * 1.2) return 'bajo';
     return 'normal';
+  }
+
+  get totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.insumosFiltrados.length / this.itemsPorPagina));
+  }
+
+  get insumosPaginados(): Insumo[] {
+    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+    return this.insumosFiltrados.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  cambiarPagina(n: number) {
+    if (n >= 1 && n <= this.totalPaginas) this.paginaActual = n;
   }
 
   get insumosFiltrados(): Insumo[] {
@@ -90,11 +107,13 @@ export class InventoryListComponent implements OnInit {
       next: () => {
         this.reponerLoading = false;
         this.cerrarModalReponer();
+        this.toast.success(`Stock repuesto correctamente (+${this.cantidadAReponer}).`);
         this.loadInsumos();
       },
       error: (err) => {
         this.reponerLoading = false;
         this.errorReponer = err.error?.message || 'Error al reponer el stock';
+        this.toast.error(this.errorReponer!);
       }
     });
   }
@@ -120,11 +139,13 @@ export class InventoryListComponent implements OnInit {
       next: () => {
         this.eliminandoLoading = false;
         this.cerrarModalEliminar();
+        this.toast.success('Insumo eliminado correctamente.');
         this.loadInsumos();
       },
       error: () => {
         this.eliminandoLoading = false;
         this.errorEliminar = 'No se puede eliminar este insumo porque está siendo utilizado en una o más recetas.';
+        this.toast.error(this.errorEliminar);
       }
     });
   }

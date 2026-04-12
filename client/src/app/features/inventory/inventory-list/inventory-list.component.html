@@ -20,16 +20,16 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
                 </svg>
             </div>
-            <input type="text" [(ngModel)]="busqueda" placeholder="Buscar insumo..."
+            <input type="text" [(ngModel)]="busqueda" (ngModelChange)="paginaActual = 1" placeholder="Buscar insumo..."
                 class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition" />
         </div>
         <div class="flex gap-2">
-            <button (click)="filtroEstado = 'todos'"
+            <button (click)="filtroEstado = 'todos'; paginaActual = 1"
                 [ngClass]="filtroEstado === 'todos' ? 'bg-gray-700 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
                 class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                 Todos
             </button>
-            <button (click)="filtroEstado = 'critico'"
+            <button (click)="filtroEstado = 'critico'; paginaActual = 1"
                 [ngClass]="filtroEstado === 'critico' ? 'bg-red-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
                 class="px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5">
                 Crítico
@@ -39,7 +39,7 @@
                     {{ contadores.critico }}
                 </span>
             </button>
-            <button (click)="filtroEstado = 'bajo'"
+            <button (click)="filtroEstado = 'bajo'; paginaActual = 1"
                 [ngClass]="filtroEstado === 'bajo' ? 'bg-yellow-500 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
                 class="px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5">
                 Bajo
@@ -49,7 +49,7 @@
                     {{ contadores.bajo }}
                 </span>
             </button>
-            <button (click)="filtroEstado = 'normal'"
+            <button (click)="filtroEstado = 'normal'; paginaActual = 1"
                 [ngClass]="filtroEstado === 'normal' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'"
                 class="px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                 Normal
@@ -82,7 +82,7 @@
                         </td>
                     </tr>
 
-                    <tr *ngFor="let insumo of insumosFiltrados" class="hover:bg-gray-50 transition-colors">
+                    <tr *ngFor="let insumo of insumosPaginados" class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4">
                             <div class="ml-2">
                                 <div class="text-sm font-medium text-gray-900">{{ insumo.nombre }}</div>
@@ -145,6 +145,24 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+        <!-- Paginación -->
+        <div *ngIf="!loading && totalPaginas > 1"
+            class="flex items-center justify-between px-6 py-3 border-t border-gray-200 bg-gray-50 text-sm">
+            <span class="text-gray-500">
+                Página {{ paginaActual }} de {{ totalPaginas }}
+                <span class="text-gray-400">· {{ insumosFiltrados.length }} resultado{{ insumosFiltrados.length !== 1 ? 's' : '' }}</span>
+            </span>
+            <div class="flex gap-2">
+                <button (click)="cambiarPagina(paginaActual - 1)" [disabled]="paginaActual === 1"
+                    class="px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium">
+                    ← Anterior
+                </button>
+                <button (click)="cambiarPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas"
+                    class="px-3 py-1.5 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium">
+                    Siguiente →
+                </button>
+            </div>
         </div>
     </div>
 </div>

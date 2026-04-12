@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BillingService, Cobro } from '../../../core/services/billing.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 type FiltroMetodo = 'todos' | 'efectivo' | 'transferencia' | 'debito' | 'credito';
 
@@ -23,7 +24,10 @@ export class BillingListComponent implements OnInit {
   cobroAEliminar: Cobro | null = null;
   eliminandoLoading = false;
 
-  constructor(private billingService: BillingService) {}
+  paginaActual = 1;
+  readonly itemsPorPagina = 10;
+
+  constructor(private billingService: BillingService, private toast: ToastService) {}
 
   ngOnInit() {
     this.loadCobros();
@@ -42,6 +46,19 @@ export class BillingListComponent implements OnInit {
     });
   }
 
+  get totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.cobrosFiltrados.length / this.itemsPorPagina));
+  }
+
+  get cobrosPaginados(): Cobro[] {
+    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+    return this.cobrosFiltrados.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  cambiarPagina(n: number) {
+    if (n >= 1 && n <= this.totalPaginas) this.paginaActual = n;
+  }
+
   get cobrosFiltrados(): Cobro[] {
     return this.cobros.filter(c => {
       const coincideBusqueda =
@@ -57,6 +74,30 @@ export class BillingListComponent implements OnInit {
 
   get totalFiltrado(): number {
     return this.cobrosFiltrados.reduce((sum, c) => sum + Number(c.monto), 0);
+  }
+
+  // ── Cierre del día ────────────────────────────────────────────────────────
+  readonly hoyStr = new Date().toDateString();
+
+  get cobrosHoy(): Cobro[] {
+    return this.cobros.filter(c => new Date(c.fecha).toDateString() === this.hoyStr);
+  }
+
+  get totalHoy(): number {
+    return this.cobrosHoy.reduce((sum, c) => sum + Number(c.monto), 0);
+  }
+
+  get cierreDesglose(): { metodo: string; total: number; cantidad: number }[] {
+    const metodos = ['efectivo', 'transferencia', 'debito', 'credito'];
+    return metodos
+      .map(m => ({
+        metodo: m,
+        total: this.cobrosHoy
+          .filter(c => c.metodo_pago?.toLowerCase() === m)
+          .reduce((s, c) => s + Number(c.monto), 0),
+        cantidad: this.cobrosHoy.filter(c => c.metodo_pago?.toLowerCase() === m).length
+      }))
+      .filter(d => d.cantidad > 0);
   }
 
   getPaymentMethodClass(metodo: string): string {
@@ -96,9 +137,13 @@ export class BillingListComponent implements OnInit {
       next: () => {
         this.eliminandoLoading = false;
         this.cerrarModalEliminar();
+        this.toast.success('Cobro eliminado correctamente.');
         this.loadCobros();
       },
-      error: () => { this.eliminandoLoading = false; }
+      error: () => {
+        this.eliminandoLoading = false;
+        this.toast.error('No se pudo eliminar el cobro.');
+      }
     });
   }
 }

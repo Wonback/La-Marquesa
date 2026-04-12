@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { OrderService, Pedido } from '../../../core/services/order.service';
+import { ToastService } from '../../../core/services/toast.service';
 
-type FiltroEstado = 'todos' | 'registrado' | 'confirmado' | 'en producción' | 'listo' | 'entregado';
+type FiltroEstado = 'pendientes' | 'todos' | 'registrado' | 'confirmado' | 'en producción' | 'listo' | 'entregado';
+
 
 @Component({
   selector: 'app-order-list',
@@ -17,15 +19,18 @@ export class OrderListComponent implements OnInit {
   loading = true;
 
   busqueda = '';
-  filtroEstado: FiltroEstado = 'todos';
+  filtroEstado: FiltroEstado = 'pendientes'; // default: ocultar entregados
 
   errorBanner: string | null = null;
+
+  paginaActual = 1;
+  readonly itemsPorPagina = 10;
 
   modalEliminarVisible = false;
   pedidoAEliminar: Pedido | null = null;
   eliminandoLoading = false;
 
-  constructor(private orderService: OrderService) {}
+  constructor(private orderService: OrderService, private toast: ToastService) {}
 
   ngOnInit() {
     this.loadPedidos();
@@ -36,7 +41,7 @@ export class OrderListComponent implements OnInit {
     this.orderService.getAll().subscribe({
       next: (data) => {
         this.pedidos = data.sort((a, b) =>
-          new Date(b.fecha_entrega).getTime() - new Date(a.fecha_entrega).getTime()
+          new Date(a.fecha_entrega).getTime() - new Date(b.fecha_entrega).getTime()
         );
         this.loading = false;
       },
@@ -44,12 +49,23 @@ export class OrderListComponent implements OnInit {
     });
   }
 
+  // ── Filtrado ──────────────────────────────────────────────────────────────
   get pedidosFiltrados(): Pedido[] {
     return this.pedidos.filter(p => {
+      const q = this.busqueda.toLowerCase();
       const coincideBusqueda =
-        p.cliente?.nombre?.toLowerCase().includes(this.busqueda.toLowerCase()) ||
-        p.id?.toString().includes(this.busqueda);
-      const coincideEstado = this.filtroEstado === 'todos' || p.estado === this.filtroEstado;
+        p.cliente?.nombre?.toLowerCase().includes(q) ||
+        p.id?.toString().includes(q);
+
+      let coincideEstado: boolean;
+      if (this.filtroEstado === 'todos') {
+        coincideEstado = true;
+      } else if (this.filtroEstado === 'pendientes') {
+        coincideEstado = p.estado !== 'entregado';
+      } else {
+        coincideEstado = p.estado === this.filtroEstado;
+      }
+
       return coincideBusqueda && coincideEstado;
     });
   }
@@ -60,9 +76,68 @@ export class OrderListComponent implements OnInit {
     estados.forEach(e => {
       result[e] = this.pedidos.filter(p => p.estado === e).length;
     });
+    result['pendientes'] = this.pedidos.filter(p => p.estado !== 'entregado').length;
     return result;
   }
 
+  // ── Paginación ────────────────────────────────────────────────────────────
+  get totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.pedidosFiltrados.length / this.itemsPorPagina));
+  }
+
+  get pedidosPaginados(): Pedido[] {
+    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+    return this.pedidosFiltrados.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  cambiarPagina(n: number) {
+    if (n >= 1 && n <= this.totalPaginas) this.paginaActual = n;
+  }
+
+  // ── Pedidos vencidos (para el banner) ─────────────────────────────────────
+  get pedidosVencidos(): Pedido[] {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    return this.pedidos.filter(p => {
+      if (p.estado === 'entregado') return false;
+      const entrega = new Date(p.fecha_entrega);
+      entrega.setHours(0, 0, 0, 0);
+      return entrega < hoy;
+    });
+  }
+
+  // ── Urgencia por fila ─────────────────────────────────────────────────────
+  getDiasInfo(pedido: Pedido): { label: string; rowClases: string; labelClases: string } {
+    if (pedido.estado === 'entregado') {
+      return {
+        label: new Date(pedido.fecha_entrega).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }),
+        rowClases: '',
+        labelClases: 'text-gray-400',
+      };
+    }
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const entrega = new Date(pedido.fecha_entrega);
+    entrega.setHours(0, 0, 0, 0);
+    const diff = Math.round((entrega.getTime() - hoy.getTime()) / 86_400_000);
+
+    if (diff < 0)   return { label: 'Vencido',       rowClases: 'bg-red-50',    labelClases: 'text-red-600 font-bold' };
+    if (diff === 0) return { label: 'Hoy',            rowClases: 'bg-orange-50', labelClases: 'text-orange-600 font-bold' };
+    if (diff === 1) return { label: 'Mañana',         rowClases: '',             labelClases: 'text-yellow-600 font-semibold' };
+    return                 { label: `En ${diff} días`, rowClases: '',            labelClases: 'text-gray-500' };
+  }
+
+  isUrgente(pedido: Pedido): boolean {
+    if (pedido.estado === 'entregado') return false;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const entrega = new Date(pedido.fecha_entrega);
+    entrega.setHours(0, 0, 0, 0);
+    return entrega <= hoy;
+  }
+
+  // ── Estilos de estado ─────────────────────────────────────────────────────
   getStatusColor(estado: string): string {
     switch (estado?.toLowerCase()) {
       case 'registrado':    return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -82,6 +157,7 @@ export class OrderListComponent implements OnInit {
     }, 0) || 0;
   }
 
+  // ── Cambio de estado ──────────────────────────────────────────────────────
   avanzarEstado(pedido: Pedido) {
     if (!pedido.id) return;
     const siguiente: Record<string, string> = {
@@ -101,14 +177,18 @@ export class OrderListComponent implements OnInit {
     pedido.estado = nuevoEstado as any;
 
     this.orderService.updateStatus(pedido.id, nuevoEstado).subscribe({
+      next: () => {
+        this.toast.success(`Estado actualizado a "${nuevoEstado}".`);
+      },
       error: (err) => {
         pedido.estado = estadoAnterior;
         this.errorBanner = err.error?.message || 'No se pudo cambiar el estado del pedido.';
+        this.toast.error(this.errorBanner!);
       }
     });
   }
 
-  // --- Modal Eliminación ---
+  // ── Modal eliminación ─────────────────────────────────────────────────────
   abrirModalEliminar(pedido: Pedido) {
     this.pedidoAEliminar = pedido;
     this.modalEliminarVisible = true;
@@ -126,9 +206,13 @@ export class OrderListComponent implements OnInit {
       next: () => {
         this.eliminandoLoading = false;
         this.cerrarModalEliminar();
+        this.toast.success('Pedido eliminado correctamente.');
         this.loadPedidos();
       },
-      error: () => { this.eliminandoLoading = false; }
+      error: () => {
+        this.eliminandoLoading = false;
+        this.toast.error('No se pudo eliminar el pedido.');
+      }
     });
   }
 }

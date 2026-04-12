@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { authController } from '../Controllers/authController';
+import { authenticateJWT } from '../Middlewares/authMiddlewares';
+import { isAdmin } from '../Middlewares/isAdmin';
 
 const router = Router();
 
-router.post('/register', async (req, res, next) => {
+router.post('/register', authenticateJWT, isAdmin, async (req, res, next) => {
   await authController.register(req, res, next);
 });
 

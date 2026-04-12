@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RecipeService } from '../../../core/services/recipe.service';
 import { ProductService, Producto } from '../../../core/services/product.service';
 import { InventoryService, Insumo } from '../../../core/services/inventory.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-recipe-form',
@@ -28,7 +29,8 @@ export class RecipeFormComponent implements OnInit {
     private productService: ProductService,
     private inventoryService: InventoryService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toast: ToastService
   ) {
     this.recipeForm = this.fb.group({
       nombre: ['', [Validators.required]],
@@ -137,11 +139,13 @@ export class RecipeFormComponent implements OnInit {
 
       request.subscribe({
         next: () => {
+          this.toast.success(this.isEditMode ? 'Receta actualizada correctamente.' : 'Receta creada correctamente.');
           this.router.navigate(['/recetas']);
         },
         error: (err) => {
           console.error(err);
           this.error = 'Ocurrió un error al guardar la receta.';
+          this.toast.error(this.error);
           this.loading = false;
         }
       });

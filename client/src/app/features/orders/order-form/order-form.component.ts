@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { OrderService } from '../../../core/services/order.service';
 import { ClientService, Cliente } from '../../../core/services/client.service';
 import { ProductService, Producto } from '../../../core/services/product.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-order-form',
@@ -29,10 +30,11 @@ export class OrderFormComponent implements OnInit {
     private clientService: ClientService,
     private productService: ProductService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private toast: ToastService
   ) {
     this.orderForm = this.fb.group({
-      cliente_id: ['', [Validators.required]],
+      cliente_id: [''],
       fecha_entrega: ['', [Validators.required]],
       // Estado inicial por defecto 'registrado'
       estado: ['registrado', [Validators.required]], 
@@ -161,9 +163,11 @@ export class OrderFormComponent implements OnInit {
       this.error = ''; // Limpiar errores previos
 
       // Estructura final que espera el backend
+      const formValue = this.orderForm.value;
       const orderData = {
-        ...this.orderForm.value,
-        productos: this.productosArray.value // El back espera "productos" array
+        ...formValue,
+        cliente_id: formValue.cliente_id || null, // '' → null para clientes eventuales
+        productos: this.productosArray.value
       };
 
       // CORRECCIÓN: Usamos .update() para enviar el contenido completo
@@ -173,11 +177,13 @@ export class OrderFormComponent implements OnInit {
 
       request.subscribe({
         next: () => {
+          this.toast.success(this.isEditMode ? 'Pedido actualizado correctamente.' : 'Pedido creado correctamente.');
           this.router.navigate(['/pedidos']);
         },
         error: (err) => {
           console.error(err);
           this.error = err.error?.message || 'Error al guardar el pedido.';
+          this.toast.error(this.error);
           this.loading = false;
         }
       });

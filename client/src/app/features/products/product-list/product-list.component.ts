@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService, Producto } from '../../../core/services/product.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 type FiltroTipo = 'todos' | 'elaborado' | 'simple';
 
@@ -32,7 +33,10 @@ export class ProductListComponent implements OnInit {
   productoAEliminar: Producto | null = null;
   eliminandoLoading = false;
 
-  constructor(private productService: ProductService) {}
+  paginaActual = 1;
+  readonly itemsPorPagina = 10;
+
+  constructor(private productService: ProductService, private toast: ToastService) {}
 
   ngOnInit() {
     this.loadProductos();
@@ -44,6 +48,19 @@ export class ProductListComponent implements OnInit {
       next: (data) => { this.productos = data; this.loading = false; },
       error: () => { this.loading = false; }
     });
+  }
+
+  get totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.productosFiltrados.length / this.itemsPorPagina));
+  }
+
+  get productosPaginados(): Producto[] {
+    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+    return this.productosFiltrados.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  cambiarPagina(n: number) {
+    if (n >= 1 && n <= this.totalPaginas) this.paginaActual = n;
   }
 
   get productosFiltrados(): Producto[] {
@@ -92,11 +109,13 @@ export class ProductListComponent implements OnInit {
       next: () => {
         this.produciendoLoading = false;
         this.cerrarModalProduccion();
+        this.toast.success(`Producción de ${this.cantidadAProducir} unidad(es) registrada.`);
         this.loadProductos();
       },
       error: (err) => {
         this.produciendoLoading = false;
         this.errorProduccion = err.error?.message || 'Error al registrar la producción';
+        this.toast.error(this.errorProduccion!);
       }
     });
   }
@@ -119,9 +138,13 @@ export class ProductListComponent implements OnInit {
       next: () => {
         this.eliminandoLoading = false;
         this.cerrarModalEliminar();
+        this.toast.success('Producto eliminado correctamente.');
         this.loadProductos();
       },
-      error: () => { this.eliminandoLoading = false; }
+      error: () => {
+        this.eliminandoLoading = false;
+        this.toast.error('No se pudo eliminar el producto.');
+      }
     });
   }
 }

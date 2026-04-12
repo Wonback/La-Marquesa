@@ -1,5 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config();
+
+if (!process.env.JWT_SECRET) {
+  console.error("❌ ERROR: JWT_SECRET no está definido en el archivo .env. El servidor no puede iniciar.");
+  process.exit(1);
+}
 import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { sequelize } from "./db";

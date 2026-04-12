@@ -5,7 +5,7 @@ import { DetallePedido } from './DetallePedido';
 
 export class Pedido extends Model {
   public id!: number;
-  public cliente_id!: number;
+  public cliente_id!: number | null;
   public fecha_entrega!: Date;
   public estado!: string;
 
@@ -18,7 +18,7 @@ export class Pedido extends Model {
 Pedido.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    cliente_id: { type: DataTypes.INTEGER, allowNull: false, references: { model: 'clientes', key: 'id' } },
+    cliente_id: { type: DataTypes.INTEGER, allowNull: true, references: { model: 'clientes', key: 'id' } },
     fecha_entrega: { type: DataTypes.DATEONLY, allowNull: false },
     estado: { type: DataTypes.STRING(20), defaultValue: 'registrado' },
   },

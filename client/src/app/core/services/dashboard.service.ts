@@ -1,29 +1,36 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { ApiService } from './api.service';
+
+export interface InsumoStockBajo {
+  id: number;
+  nombre: string;
+  stock: number;
+  stock_minimo: number;
+  unidad_medida: string;
+}
 
 export interface DashboardStats {
   totalClientes: number;
   totalProductos: number;
-  totalPedidos: number;
   totalIngresos: number;
+  ingresosDelMes: number;
   pedidosPendientes: number;
   pedidosEntregados: number;
-  // Nuevos arrays
+  cobrosPendientes: number;
+  estadosPedidos: Record<string, number>;
   recentOrders: any[];
   topProducts: any[];
+  insumosStockBajo: InsumoStockBajo[];
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class DashboardService {
-  private apiUrl = `${environment.apiUrl}/dashboard`;
-
-  constructor(private http: HttpClient) {}
+  constructor(private api: ApiService) {}
 
   getStats(): Observable<DashboardStats> {
-    return this.http.get<DashboardStats>(`${this.apiUrl}/stats`);
+    return this.api.get<DashboardStats>('dashboard/stats');
   }
 }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ClientService, Cliente } from '../../../core/services/client.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-client-list',
@@ -20,7 +21,10 @@ export class ClientListComponent implements OnInit {
   clienteAEliminar: Cliente | null = null;
   eliminandoLoading = false;
 
-  constructor(private clientService: ClientService) {}
+  paginaActual = 1;
+  readonly itemsPorPagina = 10;
+
+  constructor(private clientService: ClientService, private toast: ToastService) {}
 
   ngOnInit() {
     this.loadClientes();
@@ -32,6 +36,19 @@ export class ClientListComponent implements OnInit {
       next: (data) => { this.clientes = data; this.loading = false; },
       error: () => { this.loading = false; }
     });
+  }
+
+  get totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.clientesFiltrados.length / this.itemsPorPagina));
+  }
+
+  get clientesPaginados(): Cliente[] {
+    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+    return this.clientesFiltrados.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  cambiarPagina(n: number) {
+    if (n >= 1 && n <= this.totalPaginas) this.paginaActual = n;
   }
 
   get clientesFiltrados(): Cliente[] {
@@ -67,9 +84,13 @@ export class ClientListComponent implements OnInit {
       next: () => {
         this.eliminandoLoading = false;
         this.cerrarModalEliminar();
+        this.toast.success('Cliente eliminado correctamente.');
         this.loadClientes();
       },
-      error: () => { this.eliminandoLoading = false; }
+      error: () => {
+        this.eliminandoLoading = false;
+        this.toast.error('No se pudo eliminar el cliente.');
+      }
     });
   }
 }

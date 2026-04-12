@@ -19,16 +19,19 @@
 ## 🚀 Características Principales
 
 - **🔐 Autenticación y Roles:** Sistema seguro con roles diferenciados (Admin, Ventas, Producción).
-- **📦 Gestión de Inventario (Insumos):** Control de stock de materias primas (Harina, Azúcar, etc.) con unidades de medida.
-- **🍰 Productos y Recetas:** 
-  - Definición de productos para la venta.
-  - Creación de recetas detalladas que vinculan productos con insumos.
-  - Cálculo de costos (futuro) y requerimientos de materia prima.
+- **📦 Gestión de Inventario (Insumos):** Control de stock de materias primas con alertas de stock mínimo y reposición.
+- **🍰 Productos y Recetas:**
+  - Definición de productos para la venta (simples y elaborados).
+  - Recetas detalladas que vinculan productos con insumos.
+  - Registro de producción con descuento automático de insumos.
 - **🛒 Gestión de Pedidos:**
-  - Carrito de compras para clientes.
-  - Flujo de estados: *Registrado -> Confirmado -> En Producción -> Listo -> Entregado*.
-- **💰 Facturación y Cobros:** Registro de pagos parciales o totales, soportando múltiples métodos de pago (Efectivo, Transferencia, Débito, Crédito).
-- **📊 Dashboard:** Métricas en tiempo real sobre ventas, productos más vendidos y pedidos pendientes.
+  - Pedidos con cliente registrado o como "Cliente Eventual" (mostrador).
+  - Flujo de estados: *Registrado → Confirmado → En Producción → Listo → Entregado*.
+  - Vista priorizada por fecha de entrega con alertas de urgencia.
+- **💰 Facturación y Cobros:** Registro de cobros con múltiples métodos de pago (Efectivo, Transferencia, Débito, Crédito). Cierre del día automático con desglose por método.
+- **📊 Dashboard:** Métricas en tiempo real sobre ingresos, pedidos pendientes, productos más vendidos y alertas de stock bajo.
+- **🔔 Notificaciones:** Feedback visual inmediato (toasts) en todas las operaciones de alta, edición y eliminación.
+- **📄 Paginación:** Todas las listas paginadas (10 ítems/página) con filtros y búsqueda.
 
 ---
 
@@ -94,7 +97,7 @@ erDiagram
         enum metodo_pago
     }
 
-    CLIENTE ||--o{ PEDIDO : realiza
+    CLIENTE ||--o{ PEDIDO : "realiza (opcional)"
     PEDIDO ||--|{ DETALLE_PEDIDO : contiene
     PRODUCTO ||--o{ DETALLE_PEDIDO : incluido_en
     PEDIDO ||--o{ COBRO : genera
@@ -122,13 +125,16 @@ graph TD
     end
 
     subgraph Ventas
-    H[Cliente Solicita Pedido] --> I[Registrar Cliente]
-    I --> J[Crear Pedido]
-    J --> K[Estado: REGISTRADO]
+    H[Cliente Solicita Pedido] --> I{Cliente registrado?}
+    I -- Si --> J[Seleccionar Cliente]
+    I -- No --> J2[Cliente Eventual]
+    J --> K[Crear Pedido]
+    J2 --> K
+    K --> L2[Estado: REGISTRADO]
     end
 
     subgraph Producción
-    K --> L{Confirmar?}
+    L2 --> L{Confirmar?}
     L -- Si --> M[Estado: CONFIRMADO]
     M --> N[Estado: EN PRODUCCIÓN]
     N --> O[Elaboración en Cocina]
@@ -142,7 +148,7 @@ graph TD
     S --> T((Fin del Ciclo))
     end
 
-    G -.-> J
+    G -.-> K
 ```
 
 ---
@@ -172,6 +178,7 @@ DATABASE_URL=postgres://usuario:password@localhost:5432/la_marquesa_db
 JWT_SECRET=tu_secreto_super_seguro
 NODE_ENV=development
 ```
+> **⚠️ Importante:** `JWT_SECRET` es obligatorio. El servidor no arranca si no está definido.
 
 ### 3. Configuración del Cliente (`/client`)
 
@@ -221,7 +228,7 @@ Si usaste el seed, puedes ingresar con:
 
 ## 🛠 Stack Tecnológico
 
-- **Frontend:** Angular 16+, TailwindCSS, FontAwesome.
+- **Frontend:** Angular 17+, TailwindCSS, FontAwesome.
 - **Backend:** Node.js, Express, TypeScript.
 - **Base de Datos:** PostgreSQL, Sequelize ORM.
 - **Herramientas:** JWT para autenticación, Faker.js para datos de prueba.

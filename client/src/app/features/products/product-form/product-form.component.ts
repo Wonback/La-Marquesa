@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProductService } from '../../../core/services/product.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-product-form',
@@ -20,8 +21,9 @@ export class ProductFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private productService: ProductService,
-    private router: Router,   
-    private route: ActivatedRoute
+    private router: Router,
+    private route: ActivatedRoute,
+    private toast: ToastService
   ) {
     this.productForm = this.fb.group({
       nombre: ['', [Validators.required]],
@@ -68,11 +70,13 @@ export class ProductFormComponent implements OnInit {
 
       request.subscribe({
         next: () => {
+          this.toast.success(this.isEditMode ? 'Producto actualizado correctamente.' : 'Producto creado correctamente.');
           this.router.navigate(['/productos']);
         },
         error: (err) => {
           console.error(err);
           this.error = 'Ocurrió un error al guardar el producto.';
+          this.toast.error(this.error);
           this.loading = false;
         }
       });

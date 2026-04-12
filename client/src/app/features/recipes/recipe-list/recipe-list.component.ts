@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { RecipeService, Receta } from '../../../core/services/recipe.service';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-recipe-list',
@@ -20,7 +21,10 @@ export class RecipeListComponent implements OnInit {
   recetaAEliminar: Receta | null = null;
   eliminandoLoading = false;
 
-  constructor(private recipeService: RecipeService) {}
+  paginaActual = 1;
+  readonly itemsPorPagina = 10;
+
+  constructor(private recipeService: RecipeService, private toast: ToastService) {}
 
   ngOnInit() {
     this.loadRecetas();
@@ -32,6 +36,19 @@ export class RecipeListComponent implements OnInit {
       next: (data) => { this.recetas = data; this.loading = false; },
       error: () => { this.loading = false; }
     });
+  }
+
+  get totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.recetasFiltradas.length / this.itemsPorPagina));
+  }
+
+  get recetasPaginadas(): Receta[] {
+    const inicio = (this.paginaActual - 1) * this.itemsPorPagina;
+    return this.recetasFiltradas.slice(inicio, inicio + this.itemsPorPagina);
+  }
+
+  cambiarPagina(n: number) {
+    if (n >= 1 && n <= this.totalPaginas) this.paginaActual = n;
   }
 
   get recetasFiltradas(): Receta[] {
@@ -59,9 +76,13 @@ export class RecipeListComponent implements OnInit {
       next: () => {
         this.eliminandoLoading = false;
         this.cerrarModalEliminar();
+        this.toast.success('Receta eliminada correctamente.');
         this.loadRecetas();
       },
-      error: () => { this.eliminandoLoading = false; }
+      error: () => {
+        this.eliminandoLoading = false;
+        this.toast.error('No se pudo eliminar la receta.');
+      }
     });
   }
 }
