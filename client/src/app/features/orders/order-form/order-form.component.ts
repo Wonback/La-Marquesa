@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { OrderService } from '../../../core/services/order.service';
+import { OrderService, HistorialPedido } from '../../../core/services/order.service';
 import { ClientService, Cliente } from '../../../core/services/client.service';
 import { ProductService, Producto } from '../../../core/services/product.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -23,6 +23,7 @@ export class OrderFormComponent implements OnInit {
 
   clientes: Cliente[] = [];
   productos: Producto[] = [];
+  historial: HistorialPedido[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -90,6 +91,7 @@ export class OrderFormComponent implements OnInit {
             this.productosArray.push(group);
           });
         }
+        this.historial = pedido.historialPedidos || [];
         this.updateTotal();
         this.loading = false;
       },
@@ -150,6 +152,17 @@ export class OrderFormComponent implements OnInit {
     const cant = control.get('cantidad')?.value || 0;
     const precio = control.get('precio_unitario')?.value || 0;
     return cant * precio;
+  }
+
+  estadoColor(estado: string): string {
+    const map: Record<string, string> = {
+      'registrado': 'bg-gray-100 text-gray-700',
+      'confirmado': 'bg-blue-100 text-blue-700',
+      'en producción': 'bg-yellow-100 text-yellow-700',
+      'listo': 'bg-green-100 text-green-700',
+      'entregado': 'bg-emerald-100 text-emerald-700',
+    };
+    return map[estado] ?? 'bg-gray-100 text-gray-600';
   }
 
   onSubmit() {

@@ -6,6 +6,7 @@ import { Cliente } from '../Models/Cliente';
 import { Receta } from '../Models/Receta';
 import { DetalleReceta } from '../Models/DetalleReceta';
 import { Insumo } from '../Models/Insumo';
+import { HistorialPedido } from '../Models/HistorialPedido';
 
 const ESTADOS_VALIDOS = ['registrado', 'confirmado', 'en producción', 'listo', 'entregado'] as const;
 
@@ -22,8 +23,8 @@ const pedidoInclude = [
             model: Receta,
             as: 'receta',
             include: [
-              { 
-                model: DetalleReceta, 
+              {
+                model: DetalleReceta,
                 as: 'detallesReceta',
                 include: [{ model: Insumo, as: 'insumo' }]
               },
@@ -33,9 +34,13 @@ const pedidoInclude = [
       },
     ],
   },
-  { 
+  {
     model: Cliente,
     as: 'cliente'
+  },
+  {
+    model: HistorialPedido,
+    as: 'historialPedidos',
   },
 ];
 
@@ -43,12 +48,20 @@ export const pedidoController = {
   crearPedido: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { cliente_id, fecha_entrega, productos } = req.body;
+      const user = (req as any).user;
 
       if (!productos || productos.length === 0) {
         return res.status(400).json({ message: 'Un pedido debe contener al menos un producto' });
       }
 
       const nuevoPedido = await Pedido.create({ cliente_id, fecha_entrega });
+
+      await HistorialPedido.create({
+        pedido_id: nuevoPedido.id,
+        estado_anterior: null,
+        estado_nuevo: 'registrado',
+        usuario_nombre: user.nombre,
+      });
       
       // Variable para sumar el total del pedido si quisieras guardarlo en la tabla pedidos
       let totalPedido = 0; 
@@ -202,15 +215,23 @@ export const pedidoController = {
         }
       }
 
+      const estadoAnterior = pedido.estado;
       pedido.estado = estado;
       await pedido.save();
+
+      await HistorialPedido.create({
+        pedido_id: pedido.id,
+        estado_anterior: estadoAnterior,
+        estado_nuevo: estado,
+        usuario_nombre: user.nombre,
+      });
 
       res.json({ message: `Pedido actualizado a '${estado}'`, pedido });
     } catch (err) {
       next(err);
     }
   },
-  
+
   actualizarPedido: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
@@ -351,9 +372,71 @@ export const pedidoController = {
       pedido.estado = 'confirmado';
       await pedido.save();
 
+      await HistorialPedido.create({
+        pedido_id: pedido.id,
+        estado_anterior: 'registrado',
+        estado_nuevo: 'confirmado',
+        usuario_nombre: user.nombre,
+      });
+
       res.json({ message: 'Pedido confirmado y stock actualizado', pedido });
     } catch (err) {
       next(err);
     }
-  }
+  },
+
+  revertirPedido: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user;
+
+      if (user.rol !== 'Admin') {
+        return res.status(403).json({ message: 'Solo Admin puede revertir un pedido a registrado' });
+      }
+
+      const pedido = await Pedido.findByPk(req.params.id, { include: pedidoInclude });
+      if (!pedido) return res.status(404).json({ message: 'Pedido no encontrado' });
+
+      const estadosRevertibles = ['confirmado', 'en producción', 'listo'];
+      if (!estadosRevertibles.includes(pedido.estado)) {
+        return res.status(400).json({
+          message: `No se puede revertir un pedido en estado '${pedido.estado}'`,
+        });
+      }
+
+      // Revertir stock (espejo exacto del descuento hecho al confirmar)
+      if (pedido.detallePedidos) {
+        for (const detalle of pedido.detallePedidos) {
+          const producto = detalle.producto!;
+
+          if (producto.es_elaborado && producto.receta?.detallesReceta) {
+            for (const dr of producto.receta.detallesReceta) {
+              const insumo = dr.insumo!;
+              insumo.stock += dr.cantidad * detalle.cantidad;
+              await insumo.save();
+            }
+            producto.stock += detalle.cantidad;
+            await producto.save();
+          } else if (!producto.es_elaborado) {
+            producto.stock += detalle.cantidad;
+            await producto.save();
+          }
+        }
+      }
+
+      const estadoAnterior = pedido.estado;
+      pedido.estado = 'registrado';
+      await pedido.save();
+
+      await HistorialPedido.create({
+        pedido_id: pedido.id,
+        estado_anterior: estadoAnterior,
+        estado_nuevo: 'registrado',
+        usuario_nombre: user.nombre,
+      });
+
+      res.json({ message: 'Pedido revertido a registrado y stock restaurado', pedido });
+    } catch (err) {
+      next(err);
+    }
+  },
 };

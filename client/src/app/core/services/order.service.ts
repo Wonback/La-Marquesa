@@ -7,20 +7,30 @@ import { Producto } from './product.service';
 export interface DetallePedido {
   id?: number;
   cantidad: number;
-  precio_unitario?: number; // Opcional si lo calculas en el back
+  precio_unitario?: number;
   subtotal?: number;
   observaciones?: string;
   producto: Producto;
 }
 
+export interface HistorialPedido {
+  id?: number;
+  pedido_id: number;
+  estado_anterior: string | null;
+  estado_nuevo: string;
+  usuario_nombre: string;
+  fecha: string;
+}
+
 export interface Pedido {
   id?: number;
   cliente_id: number;
-  fecha_entrega: string | Date; // El backend manda string ISO
+  fecha_entrega: string | Date;
   estado: 'registrado' | 'confirmado' | 'en producción' | 'listo' | 'entregado';
-  total?: number; // Si tu back lo calcula o lo sumamos en el front
+  total?: number;
   cliente?: Cliente;
   detallePedidos?: DetallePedido[];
+  historialPedidos?: HistorialPedido[];
 }
 
 @Injectable({
@@ -48,6 +58,10 @@ export class OrderService {
   // Método especial para cambiar estado (Confirmar, Entregar, etc.)
   updateStatus(id: number, estado: string): Observable<Pedido> {
     return this.api.put<Pedido>(`pedidos/${id}/estado`, { estado });
+  }
+
+  revertir(id: number): Observable<any> {
+    return this.api.put<any>(`pedidos/${id}/revertir`, {});
   }
 
   delete(id: number): Observable<void> {

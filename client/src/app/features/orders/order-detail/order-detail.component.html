@@ -1,0 +1,123 @@
+<div class="container mx-auto px-4 py-6">
+    <div class="max-w-3xl mx-auto">
+
+        <!-- Encabezado -->
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-800">Detalle del Pedido</h2>
+                <p *ngIf="pedido" class="text-gray-400 text-sm mt-0.5">#{{ pedido.id }} · {{ pedido.cliente?.nombre || 'Cliente Eventual' }}</p>
+            </div>
+            <a routerLink="/pedidos"
+                class="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
+                <i class="fas fa-arrow-left text-xs"></i> Volver
+            </a>
+        </div>
+
+        <!-- Estado de carga / error -->
+        <div *ngIf="loading" class="bg-white rounded-xl shadow border border-gray-100 p-10 text-center text-gray-400 animate-pulse">
+            Cargando pedido...
+        </div>
+        <div *ngIf="error" class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-5 text-sm">
+            {{ error }}
+        </div>
+
+        <ng-container *ngIf="!loading && pedido">
+
+            <!-- Tarjeta de cabecera -->
+            <div class="bg-white rounded-xl shadow border border-gray-100 p-6 mb-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Cliente</p>
+                        <p class="font-medium text-gray-800">{{ pedido.cliente?.nombre || 'Eventual' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Fecha de entrega</p>
+                        <p class="font-medium text-gray-800">{{ pedido.fecha_entrega | date:'dd/MM/yyyy' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Estado</p>
+                        <span class="px-2.5 py-1 text-xs font-bold rounded-full border uppercase tracking-wide"
+                            [ngClass]="estadoBadge(pedido.estado)">
+                            {{ pedido.estado }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos -->
+            <div class="bg-white rounded-xl shadow border border-gray-100 p-6 mb-4">
+                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <i class="fas fa-shopping-basket text-blue-400"></i> Productos
+                </h3>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-xs text-gray-400 uppercase border-b border-gray-100">
+                            <th class="pb-2 text-left font-semibold">Producto</th>
+                            <th class="pb-2 text-center font-semibold">Cant.</th>
+                            <th class="pb-2 text-right font-semibold">P. Unit.</th>
+                            <th class="pb-2 text-right font-semibold">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let d of pedido.detallePedidos" class="border-b border-gray-50 last:border-0">
+                            <td class="py-2.5 font-medium text-gray-800">{{ d.producto.nombre }}</td>
+                            <td class="py-2.5 text-center text-gray-600">{{ d.cantidad }}</td>
+                            <td class="py-2.5 text-right text-gray-600">
+                                {{ d.precio_unitario | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                            </td>
+                            <td class="py-2.5 text-right font-semibold text-gray-800">
+                                {{ (d.precio_unitario || 0) * d.cantidad | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="pt-3 text-right text-sm font-semibold text-gray-500">Total estimado</td>
+                            <td class="pt-3 text-right text-base font-bold text-blue-600">
+                                {{ total | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Historial de estados -->
+            <div class="bg-white rounded-xl shadow border border-gray-100 p-6">
+                <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
+                    <i class="fas fa-history text-blue-400"></i> Historial de Estados
+                </h3>
+
+                <div *ngIf="historial.length === 0" class="text-center text-gray-400 text-sm py-4">
+                    Este pedido aún no tiene historial registrado.
+                </div>
+
+                <ol *ngIf="historial.length > 0" class="relative border-l border-gray-200 ml-3">
+                    <li *ngFor="let entry of historial; let last = last"
+                        class="mb-6 ml-6" [class.mb-0]="last">
+
+                        <!-- Dot -->
+                        <span class="absolute flex items-center justify-center w-7 h-7 rounded-full -left-3.5 ring-4 ring-white"
+                            [ngClass]="last ? 'bg-blue-500' : 'bg-gray-200'">
+                            <i class="fas text-xs"
+                               [ngClass]="[estadoIcono(entry.estado_nuevo), last ? 'text-white' : 'text-gray-500']"></i>
+                        </span>
+
+                        <!-- Contenido -->
+                        <div class="flex flex-wrap items-center gap-2 mb-0.5">
+                            <span class="text-sm font-semibold px-2.5 py-0.5 rounded-full border"
+                                [ngClass]="estadoBadge(entry.estado_nuevo)">
+                                {{ entry.estado_nuevo }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400">
+                            <i class="fas fa-user mr-1"></i>{{ entry.usuario_nombre }}
+                            <span class="mx-1">·</span>
+                            <i class="fas fa-clock mr-1"></i>{{ entry.fecha | date:'dd/MM/yyyy HH:mm' }}
+                        </p>
+                    </li>
+                </ol>
+            </div>
+
+        </ng-container>
+    </div>
+</div>

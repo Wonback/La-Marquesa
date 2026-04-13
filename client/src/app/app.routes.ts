@@ -46,9 +46,13 @@ export const routes: Routes = [
         path: 'pedidos/nuevo', 
         loadComponent: () => import('./features/orders/order-form/order-form.component').then(m => m.OrderFormComponent) 
       },
-      { 
-        path: 'pedidos/editar/:id', 
-        loadComponent: () => import('./features/orders/order-form/order-form.component').then(m => m.OrderFormComponent) 
+      {
+        path: 'pedidos/editar/:id',
+        loadComponent: () => import('./features/orders/order-form/order-form.component').then(m => m.OrderFormComponent)
+      },
+      {
+        path: 'pedidos/ver/:id',
+        loadComponent: () => import('./features/orders/order-detail/order-detail.component').then(m => m.OrderDetailComponent)
       },
       { 
         path: 'insumos', 

@@ -30,7 +30,16 @@ export class OrderListComponent implements OnInit {
   pedidoAEliminar: Pedido | null = null;
   eliminandoLoading = false;
 
-  constructor(private orderService: OrderService, private toast: ToastService) {}
+  userRol: string = '';
+
+  modalRevertirVisible = false;
+  pedidoARevertir: Pedido | null = null;
+  reviertendoLoading = false;
+
+  constructor(private orderService: OrderService, private toast: ToastService) {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    this.userRol = user?.rol ?? '';
+  }
 
   ngOnInit() {
     this.loadPedidos();
@@ -124,7 +133,7 @@ export class OrderListComponent implements OnInit {
 
     if (diff < 0)   return { label: 'Vencido',       rowClases: 'bg-red-50',    labelClases: 'text-red-600 font-bold' };
     if (diff === 0) return { label: 'Hoy',            rowClases: 'bg-orange-50', labelClases: 'text-orange-600 font-bold' };
-    if (diff === 1) return { label: 'Mañana',         rowClases: '',             labelClases: 'text-yellow-600 font-semibold' };
+    if (diff === 1) return { label: 'Mañana',         rowClases: 'bg-yellow-50', labelClases: 'text-yellow-600 font-semibold' };
     return                 { label: `En ${diff} días`, rowClases: '',            labelClases: 'text-gray-500' };
   }
 
@@ -197,6 +206,34 @@ export class OrderListComponent implements OnInit {
   cerrarModalEliminar() {
     this.modalEliminarVisible = false;
     this.pedidoAEliminar = null;
+  }
+
+  // ── Revertir a registrado ─────────────────────────────────────────────────
+  abrirModalRevertir(pedido: Pedido) {
+    this.pedidoARevertir = pedido;
+    this.modalRevertirVisible = true;
+  }
+
+  cerrarModalRevertir() {
+    this.modalRevertirVisible = false;
+    this.pedidoARevertir = null;
+  }
+
+  confirmarRevertir() {
+    if (!this.pedidoARevertir?.id) return;
+    this.reviertendoLoading = true;
+    this.orderService.revertir(this.pedidoARevertir.id).subscribe({
+      next: () => {
+        this.reviertendoLoading = false;
+        this.cerrarModalRevertir();
+        this.toast.success('Pedido revertido a registrado y stock restaurado.');
+        this.loadPedidos();
+      },
+      error: (err) => {
+        this.reviertendoLoading = false;
+        this.toast.error(err.error?.message || 'No se pudo revertir el pedido.');
+      },
+    });
   }
 
   confirmarEliminar() {

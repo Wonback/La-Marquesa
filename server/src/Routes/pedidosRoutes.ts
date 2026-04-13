@@ -56,6 +56,15 @@ router.put(
   }
 );
 
+router.put(
+  '/:id/revertir',
+  authenticateJWT,
+  authorizeRoles('Admin'),
+  async (req, res, next) => {
+    await pedidoController.revertirPedido(req, res, next);
+  }
+);
+
 router.delete(
   '/:id',
   authenticateJWT,

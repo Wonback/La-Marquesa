@@ -4,7 +4,7 @@
               animate-[slideIn_0.2s_ease-out]"
        [ngClass]="{
          'bg-green-600 text-white': toast.type === 'success',
-         'bg-red-600 text-white':   toast.type === 'error',
+         'bg-red-100 text-red-800 border border-red-200': toast.type === 'error',
          'bg-blue-600 text-white':  toast.type === 'info'
        }">
 

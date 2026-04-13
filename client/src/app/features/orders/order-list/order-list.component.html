@@ -158,9 +158,20 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex flex-col gap-0.5">
                                 <span class="text-xs font-mono text-gray-400">#{{ pedido.id }}</span>
-                                <span class="text-sm font-semibold" [ngClass]="getDiasInfo(pedido).labelClases">
-                                    {{ getDiasInfo(pedido).label }}
-                                </span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-semibold" [ngClass]="getDiasInfo(pedido).labelClases">
+                                        {{ getDiasInfo(pedido).label }}
+                                    </span>
+                                    <ng-container *ngIf="isUrgente(pedido)">
+                                        <span class="w-px h-3.5 bg-red-300 inline-block"></span>
+                                        <span class="text-xs font-bold text-red-600 uppercase tracking-wide flex items-center gap-0.5">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Urgente
+                                        </span>
+                                    </ng-container>
+                                </div>
                             </div>
                         </td>
 
@@ -178,21 +189,12 @@
                             </div>
                         </td>
 
-                        <!-- Estado + badge Urgente -->
+                        <!-- Estado -->
                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <div class="flex flex-col items-center gap-1">
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full uppercase tracking-wide border"
-                                    [ngClass]="getStatusColor(pedido.estado)">
-                                    {{ pedido.estado }}
-                                </span>
-                                <span *ngIf="isUrgente(pedido)"
-                                    class="text-xs font-bold text-red-600 uppercase tracking-wide flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Urgente
-                                </span>
-                            </div>
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full uppercase tracking-wide border"
+                                [ngClass]="getStatusColor(pedido.estado)">
+                                {{ pedido.estado }}
+                            </span>
                         </td>
 
                         <!-- Total -->
@@ -244,6 +246,27 @@
                                     Cobrar
                                 </a>
 
+                                <!-- Revertir a registrado (solo Admin, en estados confirmado/en producción/listo) -->
+                                <button
+                                    *ngIf="userRol === 'Admin' && ['confirmado','en producción','listo'].includes(pedido.estado)"
+                                    (click)="abrirModalRevertir(pedido)"
+                                    title="Revertir a registrado"
+                                    class="p-2 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                    </svg>
+                                </button>
+
+                                <!-- Ver detalle (siempre visible) -->
+                                <a [routerLink]="['/pedidos/ver', pedido.id]"
+                                    title="Ver detalle e historial"
+                                    class="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </a>
+
                                 <!-- Editar (solo registrado) -->
                                 <a *ngIf="pedido.estado === 'registrado'" [routerLink]="['/pedidos/editar', pedido.id]"
                                     title="Editar pedido"
@@ -285,6 +308,55 @@
                     Siguiente →
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Modal Revertir a Registrado ─── -->
+<div *ngIf="modalRevertirVisible"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+    (click)="cerrarModalRevertir()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden"
+        (click)="$event.stopPropagation()">
+
+        <div class="bg-orange-500 px-6 py-4 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-white">Revertir Pedido</h3>
+            <button (click)="cerrarModalRevertir()" class="text-orange-200 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="px-6 py-5 text-center">
+            <div class="mx-auto mb-4 flex items-center justify-center w-14 h-14 rounded-full bg-orange-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+            </div>
+            <p class="text-gray-700 text-sm">¿Revertir el pedido</p>
+            <p class="text-gray-900 font-bold text-base mt-1">
+                #{{ pedidoARevertir?.id }} — {{ pedidoARevertir?.cliente?.nombre || 'Eventual' }}
+            </p>
+            <p class="text-gray-500 text-sm mt-2">
+                Volverá a <span class="font-semibold">registrado</span> y el stock descontado será restaurado.
+            </p>
+            <p class="text-gray-400 text-xs mt-1">El pedido podrá editarse nuevamente.</p>
+        </div>
+
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+            <button (click)="cerrarModalRevertir()"
+                class="px-4 py-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors text-sm font-medium">
+                Cancelar
+            </button>
+            <button (click)="confirmarRevertir()" [disabled]="reviertendoLoading"
+                class="px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                <svg *ngIf="reviertendoLoading" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                {{ reviertendoLoading ? 'Revirtiendo...' : 'Sí, revertir' }}
+            </button>
         </div>
     </div>
 </div>

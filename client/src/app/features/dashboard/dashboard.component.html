@@ -1,6 +1,6 @@
 <div class="container mx-auto px-4 py-6">
 
-    <!-- ── ENCABEZADO ── -->
+    <!-- ── ENCABEZADO ─────────────────────────────────────────────────────── -->
     <div class="flex items-start justify-between mb-6 gap-4">
         <div>
             <p class="text-sm text-gray-500 mb-0.5" *ngIf="userName">
@@ -12,101 +12,180 @@
         </div>
         <div class="flex items-center gap-3 pt-1 flex-shrink-0">
             <span class="text-xs text-gray-400 hidden sm:block">{{ updatedText }}</span>
-            <button (click)="loadStats()"
-                    [disabled]="loading"
-                    class="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <button (click)="loadStats()" [disabled]="loading"
+                class="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 bg-white border border-gray-200 rounded-lg px-3 py-2 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <i class="fas fa-sync-alt text-xs" [ngClass]="loading ? 'animate-spin' : ''"></i>
                 Actualizar
             </button>
         </div>
     </div>
 
-    <!-- Banner de error -->
+    <!-- Error -->
     <div *ngIf="error" class="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-5 py-4 flex items-center gap-3">
         <i class="fas fa-exclamation-circle text-red-500"></i>
         <span>{{ error }}</span>
-        <button (click)="loadStats()" class="ml-auto text-sm font-medium underline hover:no-underline">
-            Reintentar
-        </button>
+        <button (click)="loadStats()" class="ml-auto text-sm font-medium underline hover:no-underline">Reintentar</button>
     </div>
 
-    <!-- ── KPI CARDS — Skeleton ── -->
-    <div *ngIf="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div *ngFor="let _ of [1,2,3,4]" class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-gray-200 animate-pulse">
-            <div class="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
-            <div class="h-7 bg-gray-200 rounded w-3/4 mb-2"></div>
+    <!-- ── ACCIONES RÁPIDAS ───────────────────────────────────────────────── -->
+    <div class="flex flex-wrap gap-3 mb-6">
+        <a routerLink="/pedidos/nuevo"
+            class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+            <i class="fas fa-plus text-xs"></i> Nuevo Pedido
+        </a>
+        <a routerLink="/cobros/nuevo"
+            class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
+            <i class="fas fa-dollar-sign text-xs"></i> Registrar Cobro
+        </a>
+        <a routerLink="/insumos/nuevo"
+            class="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 border border-gray-200 transition-colors shadow-sm">
+            <i class="fas fa-boxes text-xs text-gray-500"></i> Cargar Insumo
+        </a>
+    </div>
+
+    <!-- ── KPI CARDS — Skeleton ───────────────────────────────────────────── -->
+    <div *ngIf="loading" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
+        <div *ngFor="let _ of [1,2,3,4,5,6]"
+            class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-gray-200 animate-pulse">
+            <div class="h-3 bg-gray-200 rounded w-2/3 mb-3"></div>
+            <div class="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
             <div class="h-3 bg-gray-100 rounded w-1/2"></div>
         </div>
     </div>
 
-    <!-- ── KPI CARDS — Reales ── -->
-    <div *ngIf="!loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- ── KPI CARDS — Reales ─────────────────────────────────────────────── -->
+    <div *ngIf="!loading" class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
 
-        <!-- Ingresos del Mes -->
+        <!-- Ingresos del mes -->
         <a routerLink="/cobros"
-           class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-emerald-500 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer">
-            <div>
-                <div class="text-gray-500 text-sm font-medium mb-1">Ingresos de {{ mesActual }}</div>
-                <div class="text-2xl font-bold text-gray-800">
-                    {{ stats.ingresosDelMes | currency:'ARS':'symbol-narrow':'1.0-0' }}
-                </div>
-                <div class="text-xs text-gray-400 mt-1">
-                    Total: {{ stats.totalIngresos | currency:'ARS':'symbol-narrow':'1.0-0' }}
-                </div>
+            class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-emerald-500 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-2">
+                <p class="text-xs font-medium text-gray-500">Ingresos de {{ mesActual }}</p>
+                <span class="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                    [ngClass]="badgeCrecimiento(crecimientoMes())">
+                    {{ crecimientoMes() >= 0 ? '+' : '' }}{{ crecimientoMes() }}%
+                </span>
             </div>
-            <div class="bg-emerald-100 p-3 rounded-full text-emerald-600">
-                <i class="fas fa-money-bill-wave text-xl"></i>
-            </div>
+            <p class="text-xl font-bold text-gray-800 leading-tight">
+                {{ stats.ingresosDelMes | currency:'ARS':'symbol-narrow':'1.0-0' }}
+            </p>
+            <p class="text-xs text-gray-400 mt-1">vs. mes anterior</p>
         </a>
 
-        <!-- Pedidos Pendientes -->
+        <!-- Ingresos semana -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-blue-400 hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-2">
+                <p class="text-xs font-medium text-gray-500">Ingresos semana</p>
+                <span class="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                    [ngClass]="badgeCrecimiento(crecimientoSemana())">
+                    {{ crecimientoSemana() >= 0 ? '+' : '' }}{{ crecimientoSemana() }}%
+                </span>
+            </div>
+            <p class="text-xl font-bold text-gray-800 leading-tight">
+                {{ stats.ingresosSemanaActual | currency:'ARS':'symbol-narrow':'1.0-0' }}
+            </p>
+            <p class="text-xs text-gray-400 mt-1">vs. semana anterior</p>
+        </div>
+
+        <!-- Ticket promedio -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-purple-400 hover:shadow-md transition-shadow">
+            <p class="text-xs font-medium text-gray-500 mb-2">Ticket promedio</p>
+            <p class="text-xl font-bold text-gray-800 leading-tight">
+                {{ stats.ticketPromedio | currency:'ARS':'symbol-narrow':'1.0-0' }}
+            </p>
+            <p class="text-xs text-gray-400 mt-1">este mes</p>
+        </div>
+
+        <!-- Pedidos del mes -->
         <a routerLink="/pedidos"
-           class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-500 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer">
-            <div>
-                <div class="text-gray-500 text-sm font-medium mb-1">Pedidos Pendientes</div>
-                <div class="text-2xl font-bold text-gray-800">{{ stats.pedidosPendientes }}</div>
-                <div class="text-xs text-gray-400 mt-1">
-                    {{ stats.pedidosEntregados }} entregados en total
-                </div>
-            </div>
-            <div class="bg-orange-100 p-3 rounded-full text-orange-600">
-                <i class="fas fa-clock text-xl"></i>
-            </div>
+            class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-orange-400 hover:shadow-md transition-shadow">
+            <p class="text-xs font-medium text-gray-500 mb-2">Pedidos del mes</p>
+            <p class="text-xl font-bold text-gray-800 leading-tight">{{ stats.pedidosDelMes }}</p>
+            <p class="text-xs text-gray-400 mt-1">{{ stats.pedidosPendientes }} pendientes ahora</p>
         </a>
 
-        <!-- Cobros Pendientes -->
-        <a routerLink="/cobros"
-           class="bg-white rounded-xl shadow-sm p-6 border-l-4 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer"
-           [ngClass]="stats.cobrosPendientes > 0 ? 'border-red-500' : 'border-gray-300'">
-            <div>
-                <div class="text-gray-500 text-sm font-medium mb-1">Cobros Pendientes</div>
-                <div class="text-2xl font-bold"
-                     [ngClass]="stats.cobrosPendientes > 0 ? 'text-red-600' : 'text-gray-400'">
-                    {{ stats.cobrosPendientes }}
-                </div>
-                <div class="text-xs text-gray-400 mt-1">Pedidos listos sin cobrar</div>
-            </div>
-            <div class="p-3 rounded-full"
-                 [ngClass]="stats.cobrosPendientes > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'">
-                <i class="fas fa-file-invoice-dollar text-xl"></i>
-            </div>
-        </a>
+        <!-- Tasa de completitud -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-teal-400 hover:shadow-md transition-shadow">
+            <p class="text-xs font-medium text-gray-500 mb-2">Tasa completitud</p>
+            <p class="text-xl font-bold text-gray-800 leading-tight">{{ stats.tasaCompletitud }}%</p>
+            <p class="text-xs text-gray-400 mt-1">pedidos entregados</p>
+        </div>
 
-        <!-- Clientes -->
-        <a routerLink="/clientes"
-           class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer">
-            <div>
-                <div class="text-gray-500 text-sm font-medium mb-1">Clientes</div>
-                <div class="text-2xl font-bold text-gray-800">{{ stats.totalClientes }}</div>
-                <div class="text-xs text-gray-400 mt-1">{{ stats.totalProductos }} productos en carta</div>
-            </div>
-            <div class="bg-blue-100 p-3 rounded-full text-blue-600">
-                <i class="fas fa-users text-xl"></i>
-            </div>
-        </a>
+        <!-- Tiempo promedio producción -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border-l-4 border-yellow-400 hover:shadow-md transition-shadow">
+            <p class="text-xs font-medium text-gray-500 mb-2">Tiempo producción</p>
+            <p class="text-xl font-bold text-gray-800 leading-tight">
+                <ng-container *ngIf="stats.tiempoPromedioProduccion !== null">
+                    {{ stats.tiempoPromedioProduccion }}h
+                </ng-container>
+                <span *ngIf="stats.tiempoPromedioProduccion === null" class="text-gray-300 text-base">—</span>
+            </p>
+            <p class="text-xs text-gray-400 mt-1">confirmado → listo</p>
+        </div>
+
     </div>
 
-    <!-- ── TABLAS OPERATIVAS — Skeleton ── -->
+    <!-- ── ALERTAS OPERACIONALES ──────────────────────────────────────────── -->
+    <div *ngIf="!loading && (stats.pedidosVencenHoy > 0 || stats.pedidosVencidos > 0 || stats.cobrosPendientes > 0)"
+        class="flex flex-wrap gap-3 mb-6">
+
+        <div *ngIf="stats.pedidosVencenHoy > 0"
+            class="flex items-center gap-2 px-4 py-2.5 bg-orange-50 border border-orange-200 rounded-xl text-sm font-medium text-orange-700">
+            <i class="fas fa-clock text-orange-500"></i>
+            <span><strong>{{ stats.pedidosVencenHoy }}</strong> {{ stats.pedidosVencenHoy === 1 ? 'pedido' : 'pedidos' }} para entregar hoy</span>
+            <a routerLink="/pedidos" class="ml-1 underline text-xs hover:no-underline">Ver</a>
+        </div>
+
+        <div *ngIf="stats.pedidosVencidos > 0"
+            class="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl text-sm font-medium text-red-700">
+            <i class="fas fa-exclamation-circle text-red-500"></i>
+            <span><strong>{{ stats.pedidosVencidos }}</strong> {{ stats.pedidosVencidos === 1 ? 'pedido vencido' : 'pedidos vencidos' }} sin entregar</span>
+            <a routerLink="/pedidos" class="ml-1 underline text-xs hover:no-underline">Ver</a>
+        </div>
+
+        <div *ngIf="stats.cobrosPendientes > 0"
+            class="flex items-center gap-2 px-4 py-2.5 bg-yellow-50 border border-yellow-200 rounded-xl text-sm font-medium text-yellow-700">
+            <i class="fas fa-file-invoice-dollar text-yellow-500"></i>
+            <span><strong>{{ stats.cobrosPendientes }}</strong> {{ stats.cobrosPendientes === 1 ? 'cobro pendiente' : 'cobros pendientes' }}</span>
+            <a routerLink="/cobros" class="ml-1 underline text-xs hover:no-underline">Ver</a>
+        </div>
+
+    </div>
+
+    <!-- ── GRÁFICOS ───────────────────────────────────────────────────────── -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+        <!-- Ingresos por mes (2/3) -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-chart-bar text-blue-400"></i> Ingresos por mes
+                </h3>
+                <span class="text-xs text-gray-400">Últimos 12 meses</span>
+            </div>
+            <div class="h-52">
+                <canvas id="chartIngresos"></canvas>
+                <div *ngIf="loading" class="h-full bg-gray-50 rounded animate-pulse"></div>
+            </div>
+        </div>
+
+        <!-- Pedidos por día (1/3) -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-chart-line text-emerald-400"></i> Pedidos por día
+                </h3>
+                <span class="text-xs text-gray-400">Últimos 30 días</span>
+            </div>
+            <div class="h-52">
+                <canvas id="chartPedidos"></canvas>
+                <div *ngIf="loading" class="h-full bg-gray-50 rounded animate-pulse"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ── TABLAS OPERATIVAS — Skeleton ───────────────────────────────────── -->
     <div *ngIf="loading" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div *ngFor="let _ of [1,2]" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-pulse">
             <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
@@ -118,7 +197,7 @@
         </div>
     </div>
 
-    <!-- ── TABLAS OPERATIVAS — Reales ── -->
+    <!-- ── TABLAS OPERATIVAS — Reales ─────────────────────────────────────── -->
     <div *ngIf="!loading" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
         <!-- Próximas Entregas -->
@@ -140,16 +219,13 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <tr *ngFor="let order of stats.recentOrders"
-                            class="hover:bg-gray-50 transition-colors"
+                        <tr *ngFor="let order of stats.recentOrders" class="hover:bg-gray-50 transition-colors"
                             [ngClass]="getDiasInfo(order.fecha).rowClases">
-                            <td class="px-4 py-3 whitespace-nowrap text-sm"
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold"
                                 [ngClass]="getDiasInfo(order.fecha).labelClases">
                                 {{ getDiasInfo(order.fecha).label }}
                             </td>
-                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {{ order.cliente }}
-                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{{ order.cliente }}</td>
                             <td class="px-4 py-3 whitespace-nowrap text-center">
                                 <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full uppercase"
                                     [ngClass]="{
@@ -162,17 +238,14 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <a [routerLink]="['/pedidos/editar', order.id]"
-                                   class="text-gray-300 hover:text-blue-500 transition-colors"
-                                   title="Ver pedido">
+                                <a [routerLink]="['/pedidos/ver', order.id]"
+                                    class="text-gray-300 hover:text-blue-500 transition-colors" title="Ver pedido">
                                     <i class="fas fa-arrow-right text-xs"></i>
                                 </a>
                             </td>
                         </tr>
                         <tr *ngIf="!stats.recentOrders?.length">
-                            <td colspan="4" class="px-6 py-6 text-center text-gray-400 text-sm">
-                                No hay entregas próximas.
-                            </td>
+                            <td colspan="4" class="px-6 py-6 text-center text-gray-400 text-sm">No hay entregas próximas.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -181,11 +254,30 @@
 
         <!-- Más Vendidos -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fas fa-trophy text-yellow-500"></i> Más Vendidos
-                </h3>
-                <a routerLink="/productos" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver todos</a>
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-trophy text-yellow-500"></i> Más Vendidos
+                    </h3>
+                    <a routerLink="/productos" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver todos</a>
+                </div>
+                <div class="flex gap-1">
+                    <button (click)="filtroTopProducts = 'mes'"
+                        class="px-3 py-1 text-xs font-medium rounded-lg transition-colors"
+                        [ngClass]="filtroTopProducts === 'mes' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'">
+                        Este mes
+                    </button>
+                    <button (click)="filtroTopProducts = 'año'"
+                        class="px-3 py-1 text-xs font-medium rounded-lg transition-colors"
+                        [ngClass]="filtroTopProducts === 'año' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'">
+                        Este año
+                    </button>
+                    <button (click)="filtroTopProducts = 'historico'"
+                        class="px-3 py-1 text-xs font-medium rounded-lg transition-colors"
+                        [ngClass]="filtroTopProducts === 'historico' ? 'bg-blue-600 text-white' : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'">
+                        Histórico
+                    </button>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -197,30 +289,24 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <tr *ngFor="let prod of stats.topProducts; let i = index" class="hover:bg-gray-50">
+                        <tr *ngFor="let prod of topProductsFiltrados; let i = index" class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 flex items-center gap-2">
                                 <span class="text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
                                     [ngClass]="{
                                         'bg-yellow-100 text-yellow-700': i === 0,
-                                        'bg-gray-200   text-gray-500':  i === 1,
+                                        'bg-gray-200   text-gray-500':   i === 1,
                                         'bg-orange-100 text-orange-600': i === 2,
-                                        'bg-gray-100   text-gray-400':  i > 2
-                                    }">
-                                    {{ i + 1 }}
-                                </span>
+                                        'bg-gray-100   text-gray-400':   i > 2
+                                    }">{{ i + 1 }}</span>
                                 {{ prod.nombre }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-700">
-                                {{ prod.cantidad }}
-                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-700">{{ prod.cantidad }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-emerald-600 font-medium">
                                 {{ prod.ingresos | currency:'ARS':'symbol-narrow':'1.0-0' }}
                             </td>
                         </tr>
-                        <tr *ngIf="!stats.topProducts?.length">
-                            <td colspan="3" class="px-6 py-6 text-center text-gray-400 text-sm">
-                                No hay datos de ventas aún.
-                            </td>
+                        <tr *ngIf="topProductsFiltrados.length === 0">
+                            <td colspan="3" class="px-6 py-6 text-center text-gray-400 text-sm">No hay datos de ventas en este período.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -228,7 +314,92 @@
         </div>
     </div>
 
-    <!-- ── SECCIONES DE DETALLE — Skeleton ── -->
+    <!-- ── WIDGETS NUEVOS ─────────────────────────────────────────────────── -->
+    <div *ngIf="!loading" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+        <!-- Clientes frecuentes -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-star text-yellow-400"></i> Clientes Frecuentes
+                </h3>
+                <a routerLink="/clientes" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver todos</a>
+            </div>
+            <div *ngIf="stats.clientesFrecuentes.length === 0" class="px-6 py-8 text-center text-gray-400 text-sm">
+                No hay datos de clientes aún.
+            </div>
+            <ul *ngIf="stats.clientesFrecuentes.length > 0" class="divide-y divide-gray-100">
+                <li *ngFor="let c of stats.clientesFrecuentes; let i = index"
+                    class="px-6 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0"
+                            [ngClass]="{
+                                'bg-yellow-100 text-yellow-700': i === 0,
+                                'bg-gray-200   text-gray-600':   i === 1,
+                                'bg-orange-100 text-orange-600': i === 2,
+                                'bg-gray-100   text-gray-400':   i > 2
+                            }">{{ i + 1 }}</span>
+                        <span class="text-sm font-medium text-gray-800">{{ c.nombre }}</span>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-gray-700">{{ c.totalPedidos }} pedidos</p>
+                        <p class="text-xs text-emerald-600">{{ c.ingresos | currency:'ARS':'symbol-narrow':'1.0-0' }}</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Pedidos sin cobrar -->
+        <div class="bg-white rounded-xl shadow-sm border overflow-hidden"
+            [ngClass]="stats.pedidosSinCobrar.length > 0 ? 'border-yellow-200' : 'border-gray-100'">
+            <div class="px-6 py-4 border-b flex justify-between items-center"
+                [ngClass]="stats.pedidosSinCobrar.length > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-100'">
+                <h3 class="font-bold flex items-center gap-2"
+                    [ngClass]="stats.pedidosSinCobrar.length > 0 ? 'text-yellow-800' : 'text-gray-800'">
+                    <i class="fas fa-file-invoice-dollar"
+                        [ngClass]="stats.pedidosSinCobrar.length > 0 ? 'text-yellow-500' : 'text-gray-400'"></i>
+                    Pedidos Listos sin Cobrar
+                    <span *ngIf="stats.pedidosSinCobrar.length > 0"
+                        class="ml-1 bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                        {{ stats.pedidosSinCobrar.length }}
+                    </span>
+                </h3>
+                <a routerLink="/cobros/nuevo" *ngIf="stats.pedidosSinCobrar.length > 0"
+                    class="text-sm text-blue-600 hover:text-blue-800 font-medium">Cobrar</a>
+            </div>
+            <div *ngIf="stats.pedidosSinCobrar.length === 0" class="px-6 py-8 text-center">
+                <i class="fas fa-check-circle text-3xl text-green-400 mb-2"></i>
+                <p class="text-gray-500 text-sm">No hay pedidos listos pendientes de cobro.</p>
+            </div>
+            <ul *ngIf="stats.pedidosSinCobrar.length > 0" class="divide-y divide-yellow-100">
+                <li *ngFor="let p of stats.pedidosSinCobrar"
+                    class="px-6 py-3 flex items-center justify-between hover:bg-yellow-50 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-gray-400 font-mono">#{{ p.id }}</span>
+                        <span class="text-sm font-medium text-gray-800">{{ p.cliente }}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-bold text-yellow-700">
+                            {{ p.montoEstimado | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                        </span>
+                        <a [routerLink]="['/cobros/nuevo']" [queryParams]="{ pedido: p.id }"
+                            class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors font-medium">
+                            Cobrar
+                        </a>
+                    </div>
+                </li>
+            </ul>
+            <div *ngIf="stats.pedidosSinCobrar.length > 0"
+                class="px-6 py-3 bg-yellow-50 border-t border-yellow-100 flex justify-between items-center">
+                <span class="text-xs text-yellow-700 font-medium">Total pendiente</span>
+                <span class="text-sm font-bold text-yellow-800">
+                    {{ totalSinCobrar | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── SECCIONES DE DETALLE ───────────────────────────────────────────── -->
     <div *ngIf="loading" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div *ngFor="let _ of [1,2]" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-pulse">
             <div class="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
@@ -239,7 +410,6 @@
         </div>
     </div>
 
-    <!-- ── SECCIONES DE DETALLE — Reales ── -->
     <div *ngIf="!loading" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <!-- Pedidos por Estado -->
@@ -250,20 +420,18 @@
                 </h3>
             </div>
             <div class="p-6">
-                <!-- Barra proporcional -->
                 <div *ngIf="totalEstados > 0" class="flex h-3 rounded-full overflow-hidden mb-5 gap-px bg-gray-100">
                     <div *ngFor="let cfg of estadoConfig"
-                         [ngClass]="cfg.barra"
-                         [style.width.%]="getPct(stats.estadosPedidos[cfg.key] ?? 0)"
-                         [title]="cfg.label + ': ' + (stats.estadosPedidos[cfg.key] ?? 0)"
-                         class="transition-all duration-500 first:rounded-l-full last:rounded-r-full">
+                        [ngClass]="cfg.barra"
+                        [style.width.%]="getPct(stats.estadosPedidos[cfg.key] ?? 0)"
+                        [title]="cfg.label + ': ' + (stats.estadosPedidos[cfg.key] ?? 0)"
+                        class="transition-all duration-500 first:rounded-l-full last:rounded-r-full">
                     </div>
                 </div>
-                <!-- Pills con conteo -->
                 <div class="flex flex-wrap gap-2">
                     <div *ngFor="let cfg of estadoConfig"
-                         class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
-                         [ngClass]="cfg.clases">
+                        class="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
+                        [ngClass]="cfg.clases">
                         <span class="font-bold">{{ stats.estadosPedidos[cfg.key] ?? 0 }}</span>
                         <span>{{ cfg.label }}</span>
                     </div>
@@ -276,40 +444,36 @@
 
         <!-- Alertas de Stock -->
         <div class="bg-white rounded-xl shadow-sm border overflow-hidden"
-             [ngClass]="stats.insumosStockBajo.length > 0 ? 'border-red-200' : 'border-gray-100'">
+            [ngClass]="stats.insumosStockBajo.length > 0 ? 'border-red-200' : 'border-gray-100'">
             <div class="px-6 py-4 border-b flex justify-between items-center"
-                 [ngClass]="stats.insumosStockBajo.length > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'">
+                [ngClass]="stats.insumosStockBajo.length > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'">
                 <h3 class="font-bold flex items-center gap-2"
                     [ngClass]="stats.insumosStockBajo.length > 0 ? 'text-red-700' : 'text-gray-800'">
                     <i class="fas fa-exclamation-triangle"
-                       [ngClass]="stats.insumosStockBajo.length > 0 ? 'text-red-500' : 'text-gray-400'"></i>
+                        [ngClass]="stats.insumosStockBajo.length > 0 ? 'text-red-500' : 'text-gray-400'"></i>
                     Alertas de Stock
                     <span *ngIf="stats.insumosStockBajo.length > 0"
-                          class="ml-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                        class="ml-1 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                         {{ stats.insumosStockBajo.length }}
                     </span>
                 </h3>
                 <a routerLink="/insumos" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Ver inventario</a>
             </div>
-
-            <!-- Sin alertas -->
             <div *ngIf="stats.insumosStockBajo.length === 0" class="px-6 py-8 text-center">
                 <i class="fas fa-check-circle text-3xl text-green-400 mb-2"></i>
                 <p class="text-gray-500 text-sm">Todo el stock está en orden.</p>
             </div>
-
-            <!-- Lista de alertas -->
             <ul *ngIf="stats.insumosStockBajo.length > 0" class="divide-y divide-red-100">
                 <li *ngFor="let insumo of stats.insumosStockBajo"
                     class="px-6 py-3 flex items-center justify-between hover:bg-red-50 transition-colors">
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full flex-shrink-0"
-                              [ngClass]="insumo.stock === 0 ? 'bg-red-600' : 'bg-orange-400'"></span>
+                            [ngClass]="insumo.stock === 0 ? 'bg-red-600' : 'bg-orange-400'"></span>
                         <span class="text-sm font-medium text-gray-800">{{ insumo.nombre }}</span>
                     </div>
                     <div class="text-right">
                         <span class="text-sm font-bold"
-                              [ngClass]="insumo.stock === 0 ? 'text-red-600' : 'text-orange-500'">
+                            [ngClass]="insumo.stock === 0 ? 'text-red-600' : 'text-orange-500'">
                             {{ insumo.stock }} {{ insumo.unidad_medida }}
                         </span>
                         <span class="text-xs text-gray-400 ml-1">(mín. {{ insumo.stock_minimo }})</span>

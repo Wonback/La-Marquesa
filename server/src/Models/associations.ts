@@ -6,8 +6,11 @@ import { Cobro } from './Cobro';
 import { DetalleReceta } from './DetalleReceta';
 import { Receta } from './Receta';
 import { Insumo } from './Insumo';
+import { HistorialPedido } from './HistorialPedido';
 
 export function applyAssociations() {
+  HistorialPedido.belongsTo(Pedido, { foreignKey: 'pedido_id', as: 'pedido' });
+  Pedido.hasMany(HistorialPedido, { foreignKey: 'pedido_id', as: 'historialPedidos' });
   DetallePedido.belongsTo(Pedido, { foreignKey: 'pedido_id', as: 'pedido' });
   Pedido.hasMany(DetallePedido, { foreignKey: 'pedido_id', as: 'detallePedidos' });
 
