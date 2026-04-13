@@ -36,8 +36,31 @@
 - **Onboarding:** registro de panadería + usuario Admin inicial; pantalla de bienvenida con seed guiado para usuarios nuevos.
 - **Migraciones:** reemplazar `sync({ alter })` por migraciones versionadas (Sequelize CLI) aplicables sin downtime.
 
+### Planes de suscripción
+
+Filosofía: ambos planes permiten operar completamente — no se limitan registros (clientes, pedidos, productos) porque son el núcleo del negocio. El plan Pro hace el trabajo más rápido, más visible y más automatizado.
+
+| Feature | **Base** | **Pro** |
+|---|---|---|
+| **Precio aprox.** | ~$8 USD/mes | ~$20 USD/mes |
+| **Usuarios por panadería** | 2 | Ilimitados |
+| **Roles** | Admin / Operario (fijos) | Roles personalizados |
+| **Dashboard** | KPIs numéricos básicos | Gráficos + tendencias + alertas operacionales |
+| **Historial / reportes** | Últimos 30 días | Histórico completo |
+| **Exportación** | — | Excel/CSV |
+| **Acciones en lote** | — | Confirmar/cambiar estado en lote |
+| **Generación de PDFs** | — | Remitos y resumen de pedidos con logo |
+| **Filtros avanzados** | Búsqueda simple | Filtros multi-criterio |
+| **Notificaciones** | — | Email + WhatsApp (Twilio) para stock bajo y pedidos vencidos |
+| **Resumen periódico** | — | Resumen semanal/diario configurable por email |
+| **Personalización** | — | Logo propio + color de marca en UI y PDFs |
+| **Soporte** | Documentación | Email con respuesta en 48h |
+| **Integración Mercado Pago** | — | Cobros desde el panel |
+
+> Implementación: campo `plan` en tabla `panaderias` (`base` / `pro`); guard `PlanGuard` en el frontend y middleware `checkPlan` en el backend para features gated.
+
 ### Prioridad media (valor diferencial)
-- **Planes y suscripción:** límites por plan (usuarios, productos, pedidos/mes), integración Mercado Pago, página de pricing y gestión de plan desde el panel.
+- **Planes y suscripción:** implementar tabla de planes según spec arriba, integración Mercado Pago, página de pricing y gestión de plan desde el panel.
 - **Gestión de usuarios por panadería:** cada panadería administra sus propios usuarios con roles internos; invitación por email.
 - **Reportes y exportación:** ventas por período, productos más vendidos, exportación a Excel/CSV.
 - **Dashboard expandido** — ✅ implementado (Chart.js bar+line, 6 KPIs con %, alertas operacionales, clientes frecuentes, pedidos sin cobrar, acciones rápidas). Pendiente: selector de período, exportar reporte, donut chart comparativo.
